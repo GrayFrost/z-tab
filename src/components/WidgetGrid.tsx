@@ -53,6 +53,9 @@ function generateLayout(widgets: WidgetItem[]): Layout[] {
       y += 1
     }
 
+    // 小组件（1x1）禁用缩放
+    const banResize = ['1x1', '2x1', '2x2', '4x2'].includes(widget.size)
+
     const layout: Layout = {
       i: widget.id,
       x,
@@ -63,6 +66,7 @@ function generateLayout(widgets: WidgetItem[]): Layout[] {
       minH: 1,
       maxW: GRID_COLS,
       maxH: 4,
+      isResizable: !banResize,
     }
 
     x += w
