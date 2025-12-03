@@ -64,3 +64,78 @@ html, body, #root {
   padding: 0;
 }
 
+/* react-grid-layout 自定义样式 */
+.react-grid-placeholder {
+  background: hsl(var(--primary)) !important;
+  opacity: 0.2 !important;
+  border-radius: 1rem;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: hsl(var(--primary)) !important;
+}
+
+/* 拖拽时的组件样式 */
+.react-grid-item.react-draggable-dragging {
+  opacity: 0.9;
+  z-index: 100;
+}
+
+/* 调整大小时的组件样式 */
+.react-grid-item.resizing {
+  opacity: 0.9;
+}
+
+/* 调整大小手柄样式 */
+.react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 8px;
+  right: 8px;
+  background: transparent;
+  cursor: se-resize;
+}
+
+.react-resizable-handle::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  background: hsl(var(--muted));
+  border: 1px solid hsl(var(--border));
+  transition: all 0.2s ease;
+}
+
+.react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid hsl(var(--muted-foreground));
+  border-bottom: 2px solid hsl(var(--muted-foreground));
+  border-radius: 0 0 2px 0;
+  opacity: 0.5;
+  transition: all 0.2s ease;
+}
+
+.react-resizable-handle:hover::before {
+  background: hsl(var(--accent));
+  border-color: hsl(var(--primary));
+}
+
+.react-resizable-handle:hover::after {
+  opacity: 1;
+  border-color: hsl(var(--primary));
+}
+
+/* 隐藏默认的 resize handle 图片 */
+.react-resizable-handle-se {
+  background-image: none !important;
+}
+
