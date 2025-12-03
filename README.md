@@ -1,44 +1,67 @@
-# Z-Tab Chrome Extension
+# Z-Tab
 
-一个简单的 Chrome 扩展，显示 Hello World。
+一个使用 React + shadcn/ui 构建的 Chrome 新标签页扩展。
+
+## 技术栈
+
+- ⚛️ React 18
+- 🎨 Tailwind CSS
+- 🧩 shadcn/ui 组件库
+- 📦 Vite 构建工具
+- 📝 TypeScript
+
+## 开发
+
+### 安装依赖
+
+```bash
+npm install
+```
+
+### 开发模式
+
+```bash
+npm run dev
+```
+
+访问 http://localhost:5173/newtab.html 预览页面
+
+### 构建扩展
+
+```bash
+npm run build
+```
+
+构建产物会输出到 `dist` 目录。
+
+## 安装扩展
+
+1. 运行 `npm run build` 构建项目
+2. 打开 Chrome 浏览器，访问 `chrome://extensions/`
+3. 开启右上角的 "开发者模式"
+4. 点击 "加载已解压的扩展程序"
+5. 选择项目的 `dist` 目录
+6. 打开新标签页，即可看到 Z-Tab 扩展页面
 
 ## 项目结构
 
 ```
 z-tab/
-├── manifest.json    # 扩展配置文件
-├── popup.html       # 弹出页面
-├── popup.css        # 样式文件
-├── popup.js         # JavaScript 文件
-├── package.json     # Node.js 配置
-├── icons/           # 图标目录
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-└── README.md
+├── src/
+│   ├── components/
+│   │   └── ui/          # shadcn/ui 组件
+│   ├── lib/
+│   │   └── utils.ts     # 工具函数
+│   ├── App.tsx          # 主应用组件
+│   ├── main.tsx         # 入口文件
+│   └── index.css        # 全局样式
+├── newtab.html          # 新标签页 HTML 模板
+├── manifest.json        # Chrome 扩展配置
+├── vite.config.ts       # Vite 配置
+├── tailwind.config.js   # Tailwind 配置
+└── package.json
 ```
 
-## 安装步骤
+## License
 
-1. 打开 Chrome 浏览器，访问 `chrome://extensions/`
-2. 开启右上角的「开发者模式」
-3. 点击「加载已解压的扩展程序」
-4. 选择 `z-tab` 项目目录
-
-## 图标生成
-
-如果没有图标文件，可以使用在线工具生成或使用以下命令（需要安装 ImageMagick）：
-
-```bash
-# 从 SVG 生成不同尺寸的 PNG 图标
-convert -background none icon.svg -resize 16x16 icons/icon16.png
-convert -background none icon.svg -resize 48x48 icons/icon48.png
-convert -background none icon.svg -resize 128x128 icons/icon128.png
-```
-
-或者暂时可以先删除 manifest.json 中的 icons 配置来测试。
-
-## 开发
-
-- Node.js 版本: >= 22.13.0
-
+MIT
