@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search } from 'lucide-react'
+import { Search, Globe, CircleDot } from 'lucide-react'
 
 type SearchEngine = 'google' | 'baidu'
 
@@ -52,13 +52,13 @@ export function SearchBar() {
           <SelectContent align="start" className="min-w-[110px]">
             <SelectItem value="google" className="cursor-pointer pl-3">
               <div className="flex items-center gap-2">
-                <span>🔍</span>
+                <Globe className="w-4 h-4" />
                 <span>Google</span>
               </div>
             </SelectItem>
             <SelectItem value="baidu" className="cursor-pointer pl-3">
               <div className="flex items-center gap-2">
-                <span>🔎</span>
+                <CircleDot className="w-4 h-4" />
                 <span>百度</span>
               </div>
             </SelectItem>

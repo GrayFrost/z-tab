@@ -2,6 +2,16 @@ import { useState } from 'react'
 import GridLayout, { Layout } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
+import {
+  LayoutDashboard,
+  TrendingUp,
+  Clock,
+  CloudSun,
+  FileText,
+  Target,
+  Settings,
+  type LucideIcon,
+} from 'lucide-react'
 
 type WidgetSize = '1x1' | '2x1' | '2x2' | '4x2'
 
@@ -9,7 +19,7 @@ interface WidgetItem {
   id: string
   size: WidgetSize
   title: string
-  icon: string
+  icon: LucideIcon
 }
 
 const sizeToGrid: Record<WidgetSize, { w: number; h: number }> = {
@@ -21,13 +31,13 @@ const sizeToGrid: Record<WidgetSize, { w: number; h: number }> = {
 
 // 示例组件数据
 const defaultWidgets: WidgetItem[] = [
-  { id: 'banner', size: '4x2', title: '大型横幅组件', icon: '📊' },
-  { id: 'medium', size: '2x2', title: '中等组件', icon: '📈' },
-  { id: 'wide', size: '2x1', title: '横向组件', icon: '⏰' },
-  { id: 'small1', size: '1x1', title: '天气', icon: '🌤️' },
-  { id: 'small2', size: '1x1', title: '笔记', icon: '📝' },
-  { id: 'small3', size: '1x1', title: '目标', icon: '🎯' },
-  { id: 'small4', size: '1x1', title: '设置', icon: '⚙️' },
+  { id: 'banner', size: '4x2', title: '大型横幅组件', icon: LayoutDashboard },
+  { id: 'medium', size: '2x2', title: '中等组件', icon: TrendingUp },
+  { id: 'wide', size: '2x1', title: '横向组件', icon: Clock },
+  { id: 'small1', size: '1x1', title: '天气', icon: CloudSun },
+  { id: 'small2', size: '1x1', title: '笔记', icon: FileText },
+  { id: 'small3', size: '1x1', title: '目标', icon: Target },
+  { id: 'small4', size: '1x1', title: '设置', icon: Settings },
 ]
 
 // Grid 配置常量
@@ -85,6 +95,7 @@ interface WidgetCardProps {
 
 function WidgetCard({ widget }: WidgetCardProps) {
   const sizeLabel = widget.size.replace('x', '×')
+  const Icon = widget.icon
 
   return (
     <div className="h-full rounded-2xl bg-card border border-border p-4 flex flex-col cursor-move">
@@ -95,7 +106,7 @@ function WidgetCard({ widget }: WidgetCardProps) {
         </span>
       </div>
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
-        <span className="text-3xl">{widget.icon}</span>
+        <Icon className="w-8 h-8" strokeWidth={1.5} />
       </div>
     </div>
   )
