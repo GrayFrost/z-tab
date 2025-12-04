@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent } from 'react'
+import { useState, useEffect, KeyboardEvent } from 'react'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -9,8 +9,11 @@ import {
 } from '@/components/ui/select'
 import { Search } from 'lucide-react'
 import { BrandGoogle, BrandBaidu } from '@/svg/icon-collection'
+import { db } from '@/lib/db'
 
 type SearchEngine = 'google' | 'baidu'
+
+const SEARCH_ENGINE_KEY = 'search-engine'
 
 const searchEngines: Record<SearchEngine, { name: string; url: string }> = {
   google: {
@@ -26,6 +29,21 @@ const searchEngines: Record<SearchEngine, { name: string; url: string }> = {
 export function SearchBar() {
   const [searchEngine, setSearchEngine] = useState<SearchEngine>('google')
   const [searchQuery, setSearchQuery] = useState('')
+
+  // 从 IndexedDB 加载保存的搜索引擎设置
+  useEffect(() => {
+    db.settings.get(SEARCH_ENGINE_KEY).then((saved) => {
+      if (saved && (saved === 'google' || saved === 'baidu')) {
+        setSearchEngine(saved)
+      }
+    })
+  }, [])
+
+  // 切换搜索引擎时保存到 IndexedDB
+  const handleEngineChange = (value: SearchEngine) => {
+    setSearchEngine(value)
+    db.settings.set(SEARCH_ENGINE_KEY, value)
+  }
 
   const handleSearch = () => {
     if (!searchQuery.trim()) return
@@ -45,7 +63,7 @@ export function SearchBar() {
         {/* 搜索引擎选择器 */}
         <Select
           value={searchEngine}
-          onValueChange={(value: SearchEngine) => setSearchEngine(value)}
+          onValueChange={handleEngineChange}
         >
           <SelectTrigger className="w-[130px] h-9 border-0 bg-transparent hover:bg-muted/50 rounded-lg focus:ring-0 focus:ring-offset-0 px-3 transition-colors">
             <SelectValue />
