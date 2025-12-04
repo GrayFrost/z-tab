@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import GridLayout, { Layout } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -7,6 +7,7 @@ import type { GridItem, SiteItem, WidgetItem } from './types'
 import { isSiteItem, isAddSiteItem } from './types'
 import { GRID_COLS, GRID_MARGIN, GRID_WIDTH, ROW_HEIGHT, sizeToGrid } from './constants'
 import { getFaviconUrl, getSiteName } from './utils/favicon'
+import { saveSites, loadSites } from './utils/storage'
 import { WidgetCard, SiteCard, AddSiteCard } from './widgets'
 import { AddSiteDialog } from './AddSiteDialog'
 import { defaultWidgets } from './data'
@@ -55,9 +56,20 @@ function generateLayout(items: GridItem[]): Layout[] {
   })
 }
 
+// 初始化数据：合并默认 widgets 和已保存的 sites
+function getInitialItems(): GridItem[] {
+  const savedSites = loadSites()
+  // 找到 add-site 按钮的位置，在它之前插入已保存的网站
+  const addSiteIndex = defaultWidgets.findIndex(item => item.type === 'add-site')
+  const items = [...defaultWidgets]
+  items.splice(addSiteIndex, 0, ...savedSites)
+  return items
+}
+
 export function WidgetGrid() {
-  const [items, setItems] = useState<GridItem[]>(defaultWidgets)
-  const [layout, setLayout] = useState<Layout[]>(() => generateLayout(defaultWidgets))
+  const initialItems = useMemo(() => getInitialItems(), [])
+  const [items, setItems] = useState<GridItem[]>(initialItems)
+  const [layout, setLayout] = useState<Layout[]>(() => generateLayout(initialItems))
   const [dialogOpen, setDialogOpen] = useState(false)
   const [urlInput, setUrlInput] = useState('')
 
@@ -88,10 +100,25 @@ export function WidgetGrid() {
     const newItems = [...items]
     newItems.splice(addSiteIndex, 0, newSite)
 
+    // 保存所有 site 类型的项目到 localStorage
+    const allSites = newItems.filter(item => item.type === 'site') as SiteItem[]
+    saveSites(allSites)
+
     setItems(newItems)
     setLayout(generateLayout(newItems))
     setUrlInput('')
     setDialogOpen(false)
+  }
+
+  const handleDeleteItem = (id: string) => {
+    const newItems = items.filter(item => item.id !== id)
+    
+    // 如果删除的是网站，同步更新 localStorage
+    const allSites = newItems.filter(item => item.type === 'site') as SiteItem[]
+    saveSites(allSites)
+
+    setItems(newItems)
+    setLayout(generateLayout(newItems))
   }
 
   const renderItem = (item: GridItem) => {
@@ -99,9 +126,9 @@ export function WidgetGrid() {
       return <AddSiteCard onClick={() => setDialogOpen(true)} />
     }
     if (isSiteItem(item)) {
-      return <SiteCard site={item} />
+      return <SiteCard site={item} onDelete={() => handleDeleteItem(item.id)} />
     }
-    return <WidgetCard widget={item as WidgetItem} />
+    return <WidgetCard widget={item as WidgetItem} onDelete={() => handleDeleteItem(item.id)} />
   }
 
   return (

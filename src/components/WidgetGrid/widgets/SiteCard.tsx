@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import type { SiteItem } from '../types'
 import { getNextFaviconUrl } from '../utils/favicon'
+import { DeleteButton } from './DeleteButton'
 
 interface SiteCardProps {
   site: SiteItem
+  onDelete?: () => void
 }
 
-export function SiteCard({ site }: SiteCardProps) {
+export function SiteCard({ site, onDelete }: SiteCardProps) {
   const [currentFavicon, setCurrentFavicon] = useState(site.favicon)
   const [showFallback, setShowFallback] = useState(false)
 
@@ -28,9 +30,10 @@ export function SiteCard({ site }: SiteCardProps) {
   return (
     <div
       onClick={handleClick}
-      className="h-full rounded-2xl bg-card border border-border flex items-center justify-center cursor-pointer hover:scale-105 hover:shadow-lg transition-all group overflow-hidden"
+      className="relative h-full rounded-2xl bg-card border border-border flex items-center justify-center cursor-pointer hover:scale-105 hover:shadow-lg transition-all group overflow-visible"
       title={site.title}
     >
+      {onDelete && <DeleteButton onDelete={onDelete} />}
       {showFallback ? (
         <span className="text-2xl font-semibold text-muted-foreground">
           {site.title.charAt(0).toUpperCase()}

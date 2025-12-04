@@ -1,15 +1,18 @@
 import type { WidgetItem } from '../types'
+import { DeleteButton } from './DeleteButton'
 
 interface WidgetCardProps {
   widget: WidgetItem
+  onDelete?: () => void
 }
 
-export function WidgetCard({ widget }: WidgetCardProps) {
+export function WidgetCard({ widget, onDelete }: WidgetCardProps) {
   const sizeLabel = widget.size.replace('x', '×')
   const Icon = widget.icon
 
   return (
-    <div className="h-full rounded-2xl bg-card border border-border p-4 flex flex-col cursor-move">
+    <div className="relative h-full rounded-2xl bg-card border border-border p-4 flex flex-col cursor-move group">
+      {onDelete && <DeleteButton onDelete={onDelete} />}
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-medium text-foreground truncate">{widget.title}</h3>
         <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded shrink-0 ml-2">
