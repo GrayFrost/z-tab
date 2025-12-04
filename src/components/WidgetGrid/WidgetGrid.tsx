@@ -7,7 +7,6 @@ import type { GridItem, SiteItem, WidgetItem } from './types'
 import { isSiteItem, isAddSiteItem } from './types'
 import { GRID_COLS, GRID_MARGIN, GRID_WIDTH, ROW_HEIGHT, sizeToGrid } from './constants'
 import { getFaviconUrl, getSiteName } from './utils/favicon'
-import { loadSites } from './utils/storage' // 仅用于迁移数据
 import { db } from '@/lib/db'
 import { WidgetCard, SiteCard, AddSiteCard } from './widgets'
 import { AddSiteDialog } from './AddSiteDialog'
@@ -68,6 +67,62 @@ function restoreIcons(sites: SiteItem[]): SiteItem[] {
   })
 }
 
+// 计算 add-site 按钮的最佳位置（始终在所有其他 widget 后面）
+// 逻辑：找到最后一行，看这一行还有没有空间，有就放后面，没有就另起一行
+function calculateAddSitePosition(layoutWithoutAddSite: Layout[]): { x: number; y: number } {
+  if (layoutWithoutAddSite.length === 0) {
+    return { x: 0, y: 0 }
+  }
+
+  // 1. 找到最大的 y 值（最后一行的行号）
+  let maxY = 0
+  layoutWithoutAddSite.forEach(item => {
+    // widget 占据的最底部行 = y + h - 1
+    maxY = Math.max(maxY, item.y + item.h - 1)
+  })
+
+  // 2. 在最后一行，找到被占用的最大 x + w（最右边界）
+  let maxXEndInLastRow = 0
+  layoutWithoutAddSite.forEach(item => {
+    // 检查这个 widget 是否占据了最后一行
+    // widget 占据的行范围是 [item.y, item.y + item.h - 1]
+    const widgetBottomY = item.y + item.h - 1
+    if (widgetBottomY >= maxY) {
+      // 这个 widget 延伸到了最后一行，记录它的右边界
+      maxXEndInLastRow = Math.max(maxXEndInLastRow, item.x + item.w)
+    }
+  })
+
+  // 3. 判断最后一行是否还有空间
+  if (maxXEndInLastRow < GRID_COLS) {
+    // 最后一行还有空间，放在这一行的最后
+    return { x: maxXEndInLastRow, y: maxY }
+  } else {
+    // 最后一行满了，另起一行
+    return { x: 0, y: maxY + 1 }
+  }
+}
+
+// 更新布局中 add-site 按钮的位置
+function repositionAddSiteButton(currentLayout: Layout[]): Layout[] {
+  const layoutWithoutAddSite = currentLayout.filter(l => l.i !== 'add-site')
+  const addSiteLayout = currentLayout.find(l => l.i === 'add-site')
+  
+  if (!addSiteLayout) return currentLayout
+
+  const { x, y } = calculateAddSitePosition(layoutWithoutAddSite)
+  
+  // 如果位置没变，直接返回
+  if (addSiteLayout.x === x && addSiteLayout.y === y) {
+    return currentLayout
+  }
+
+  return [
+    ...layoutWithoutAddSite,
+    { ...addSiteLayout, x, y }
+  ]
+}
+
 const LAYOUT_STORAGE_KEY = 'widget-layout'
 
 export function WidgetGrid() {
@@ -83,20 +138,17 @@ export function WidgetGrid() {
       try {
         // 1. 尝试从 IndexedDB 加载站点数据
         let sites = await db.sites.getAll()
+        let shouldResetLayout = false // 标记是否需要重置布局
         
-        // 2. 如果 DB 为空，检查 localStorage 是否有数据（迁移旧数据）
+        // 2. 如果 DB 为空，使用预设数据
         if (sites.length === 0) {
-          const localData = loadSites() // 这里是旧的 localStorage 方法
-          if (localData.length > 0) {
-            console.log('Migrating data from localStorage to IndexedDB...')
-            sites = localData
-            await db.sites.saveAll(sites)
-          } else {
-            // 3. 如果都没有数据，使用预设数据
-            console.log('Initializing with preset sites...')
-            sites = [...presetSites]
-            await db.sites.saveAll(sites)
-          }
+          console.log('Initializing with preset sites...')
+          sites = [...presetSites]
+          // 保存到 IndexedDB 前移除 icon（函数不能被序列化）
+          const sitesToSave = sites.map(({ icon, ...rest }) => rest) as SiteItem[]
+          await db.sites.saveAll(sitesToSave)
+          // 使用预设数据时，需要重置布局
+          shouldResetLayout = true
         }
 
         // 4. 恢复图标并设置初始 Items
@@ -104,34 +156,39 @@ export function WidgetGrid() {
         const initialItems = [...restoredSites, ...fixedWidgets]
         setItems(initialItems)
 
-        // 5. 尝试加载保存的布局
-        const savedLayout = await db.settings.get(LAYOUT_STORAGE_KEY)
+        // 5. 确定使用的布局
         let initialLayout: Layout[] = []
 
-        if (savedLayout && Array.isArray(savedLayout) && savedLayout.length > 0) {
-          // 过滤掉布局中存在但 items 中不存在的项目（虽然很少见）
-          // 并且确保所有 items 都有布局
-          const itemIds = new Set(initialItems.map(i => i.id))
-          const validSavedLayout = savedLayout.filter(l => itemIds.has(l.i))
-          
-          // 检查是否有新添加的 item 没有在保存的布局中
-          const missingLayoutItems = initialItems.filter(item => !validSavedLayout.find(l => l.i === item.id))
-          
-          if (missingLayoutItems.length > 0) {
-            // 为缺失的项目生成默认布局，并合并
-            const defaultLayout = generateLayout(initialItems)
-            // 这里简单合并，实际可能需要更复杂的算法寻找空位，但在 generateLayout 中已处理重叠问题
-            // 我们优先保留保存的布局位置
-            initialLayout = [
-                ...validSavedLayout,
-                ...defaultLayout.filter(l => missingLayoutItems.some(item => item.id === l.i))
-            ]
-          } else {
-            initialLayout = validSavedLayout
-          }
+        if (shouldResetLayout) {
+          // 使用预设数据时，强制重新生成布局并清除旧的 layout 数据
+          initialLayout = generateLayout(initialItems)
+          await db.settings.set(LAYOUT_STORAGE_KEY, initialLayout)
         } else {
-           // 没有保存的布局，生成默认布局
-           initialLayout = generateLayout(initialItems)
+          // 尝试加载保存的布局
+          const savedLayout = await db.settings.get(LAYOUT_STORAGE_KEY)
+
+          if (savedLayout && Array.isArray(savedLayout) && savedLayout.length > 0) {
+            // 过滤掉布局中存在但 items 中不存在的项目
+            const itemIds = new Set(initialItems.map(i => i.id))
+            const validSavedLayout = savedLayout.filter(l => itemIds.has(l.i))
+            
+            // 检查是否有新添加的 item 没有在保存的布局中
+            const missingLayoutItems = initialItems.filter(item => !validSavedLayout.find(l => l.i === item.id))
+            
+            if (missingLayoutItems.length > 0) {
+              // 为缺失的项目生成默认布局，并合并
+              const defaultLayout = generateLayout(initialItems)
+              initialLayout = [
+                  ...validSavedLayout,
+                  ...defaultLayout.filter(l => missingLayoutItems.some(item => item.id === l.i))
+              ]
+            } else {
+              initialLayout = validSavedLayout
+            }
+          } else {
+            // 没有保存的布局，生成默认布局
+            initialLayout = generateLayout(initialItems)
+          }
         }
         
         setLayout(initialLayout)
@@ -149,9 +206,11 @@ export function WidgetGrid() {
   }, [])
 
   const handleLayoutChange = (newLayout: Layout[]) => {
-    setLayout(newLayout)
+    // 每次布局变化后，重新定位 add-site 按钮到正确位置
+    const adjustedLayout = repositionAddSiteButton(newLayout)
+    setLayout(adjustedLayout)
     // 保存布局到 IndexedDB
-    db.settings.set(LAYOUT_STORAGE_KEY, newLayout).catch(err => {
+    db.settings.set(LAYOUT_STORAGE_KEY, adjustedLayout).catch(err => {
         console.error('Failed to save layout:', err)
     })
   }
@@ -257,12 +316,19 @@ export function WidgetGrid() {
       }
     }
 
+    // 删除时，移除对应的 layout，并重新定位 add-site 按钮
+    const layoutWithoutDeleted = layout.filter(l => l.i !== id)
+    const newLayout = repositionAddSiteButton(layoutWithoutDeleted)
+    
     setItems(newItems)
-    // 删除时，移除对应的 layout
-    const newLayout = layout.filter(l => l.i !== id)
     setLayout(newLayout)
-    // 保存新布局
-    db.settings.set(LAYOUT_STORAGE_KEY, newLayout)
+    
+    // 保存新布局到 IndexedDB
+    try {
+      await db.settings.set(LAYOUT_STORAGE_KEY, newLayout)
+    } catch (error) {
+      console.error('Failed to save layout after delete:', error)
+    }
   }
 
   const renderItem = (item: GridItem) => {
