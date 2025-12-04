@@ -17,27 +17,28 @@
     "node": ">=22.13.0"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-slot": "^1.1.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "tailwind-merge": "^2.6.0",
     "lucide-react": "^0.468.0",
-    "@radix-ui/react-slot": "^1.1.0",
-    "@radix-ui/react-select": "^2.1.2",
-    "react-grid-layout": "^1.5.0"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-grid-layout": "^1.5.0",
+    "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
-    "@types/react-grid-layout": "^1.3.5",
+    "@types/chrome": "^0.0.287",
+    "@types/node": "^22.10.1",
     "@types/react": "^18.3.14",
     "@types/react-dom": "^18.3.2",
-    "@types/node": "^22.10.1",
-    "@types/chrome": "^0.0.287",
+    "@types/react-grid-layout": "^1.3.5",
     "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "~5.6.3",
-    "vite": "^6.0.3",
-    "tailwindcss": "^3.4.16",
+    "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
-    "autoprefixer": "^10.4.20"
+    "tailwindcss": "^3.4.16",
+    "typescript": "~5.6.3",
+    "vite": "^6.0.3"
   }
 }
