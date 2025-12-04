@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import type { SiteItem } from '../types'
 import { getNextFaviconUrl } from '../utils/favicon'
-import { getCachedFavicon, cacheFavicon, imageToBase64 } from '../utils/storage'
 
 interface SiteCardProps {
   site: SiteItem
@@ -10,29 +9,9 @@ interface SiteCardProps {
 }
 
 export function SiteCard({ site, onDelete }: SiteCardProps) {
-  // 优先使用缓存的 base64 favicon
-  const cachedFavicon = getCachedFavicon(site.url)
-  const [currentFavicon, setCurrentFavicon] = useState(cachedFavicon || site.favicon)
+  const [currentFavicon, setCurrentFavicon] = useState(site.favicon)
   const [showFallback, setShowFallback] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
-  const hasCached = useRef(!!cachedFavicon)
-
-  // 后台尝试获取并缓存 favicon（不影响显示）
-  useEffect(() => {
-    if (hasCached.current || currentFavicon.startsWith('data:')) return
-    
-    const img = new Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => {
-      const base64 = imageToBase64(img)
-      if (base64) {
-        cacheFavicon(site.url, base64)
-        hasCached.current = true
-      }
-    }
-    img.onerror = () => {}
-    img.src = currentFavicon
-  }, [currentFavicon, site.url])
 
   // 点击其他地方时隐藏删除按钮
   useEffect(() => {
