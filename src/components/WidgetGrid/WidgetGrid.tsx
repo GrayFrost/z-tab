@@ -10,7 +10,7 @@ import { getFaviconUrl, getSiteName } from './utils/favicon'
 import { saveSites, loadSites } from './utils/storage'
 import { WidgetCard, SiteCard, AddSiteCard } from './widgets'
 import { AddSiteDialog } from './AddSiteDialog'
-import { defaultWidgets } from './data'
+import { presetSites, fixedWidgets, iconMap } from './data'
 
 // 生成布局
 function generateLayout(items: GridItem[]): Layout[] {
@@ -56,14 +56,47 @@ function generateLayout(items: GridItem[]): Layout[] {
   })
 }
 
-// 初始化数据：合并默认 widgets 和已保存的 sites
+// 恢复站点数据的图标组件
+function restoreIcons(sites: SiteItem[]): SiteItem[] {
+  return sites.map(site => {
+    // 如果 id 在 iconMap 中，恢复图标组件
+    if (site.id in iconMap) {
+      return { ...site, icon: iconMap[site.id] }
+    }
+    return site
+  })
+}
+
+// 初始化数据
 function getInitialItems(): GridItem[] {
-  const savedSites = loadSites()
-  // 找到 add-site 按钮的位置，在它之前插入已保存的网站
-  const addSiteIndex = defaultWidgets.findIndex(item => item.type === 'add-site')
-  const items = [...defaultWidgets]
-  items.splice(addSiteIndex, 0, ...savedSites)
-  return items
+  const loadedSites = loadSites()
+  
+  // 如果 localStorage 中没有数据（返回空数组且 key 不存在），说明是首次访问
+  // 这里我们需要判断 localStorage 是否真的为空，因为 loadSites 在出错或为空时都返回 []
+  // 简单的判断方式是检查 localStorage.getItem('z-tab-sites') 是否为 null
+  // 但由于 loadSites 封装了 storage 访问，我们暂时假定如果是空数组且需要预设，就用预设
+  
+  // 更好的做法：直接在组件 mount 时判断，如果 savedSites 为空，则写入预设
+  
+  let sites: SiteItem[] = []
+  
+  // 检查 localStorage 是否有数据
+  const savedData = localStorage.getItem('z-tab-sites')
+  
+  // 如果没有数据，或者数据为空数组，都使用预设站点
+  // 注意：这会覆盖用户手动清空所有站点的情况，如果用户想保持空列表，这种策略可能不合适
+  // 但在开发阶段或者为了推广预设站点，这是可行的
+  if (!savedData || savedData === '[]') {
+    // 首次访问或列表为空，使用预设站点
+    sites = [...presetSites]
+    // 立即保存到 localStorage
+    saveSites(sites)
+  } else {
+    // 从 localStorage 加载并恢复图标
+    sites = restoreIcons(loadedSites)
+  }
+
+  return [...sites, ...fixedWidgets]
 }
 
 export function WidgetGrid() {
@@ -98,7 +131,12 @@ export function WidgetGrid() {
     // 在 add-site 按钮之前插入新网站
     const addSiteIndex = items.findIndex(item => item.type === 'add-site')
     const newItems = [...items]
-    newItems.splice(addSiteIndex, 0, newSite)
+    // 如果没有找到 add-site 按钮（不应该发生），则添加到末尾
+    if (addSiteIndex !== -1) {
+      newItems.splice(addSiteIndex, 0, newSite)
+    } else {
+      newItems.push(newSite)
+    }
 
     // 保存所有 site 类型的项目到 localStorage
     const allSites = newItems.filter(item => item.type === 'site') as SiteItem[]

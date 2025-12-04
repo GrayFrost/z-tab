@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import type { ComponentType, SVGProps } from 'react'
 
 export type WidgetSize = '1x1' | '2x1' | '2x2' | '4x2'
 export type WidgetType = 'widget' | 'site' | 'add-site'
@@ -17,6 +18,7 @@ export interface SiteItem {
   title: string
   url: string
   favicon: string
+  icon?: ComponentType<SVGProps<SVGSVGElement>>
   type: WidgetType
 }
 

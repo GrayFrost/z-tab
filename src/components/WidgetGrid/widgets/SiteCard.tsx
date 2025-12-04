@@ -69,6 +69,8 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
     }
   }
 
+  const Icon = site.icon
+
   return (
     <div
       onContextMenu={handleContextMenu}
@@ -93,7 +95,9 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
         className="w-14 h-14 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200 rounded-xl"
         title={`打开 ${site.title}`}
       >
-        {showFallback ? (
+        {Icon ? (
+          <Icon className="w-10 h-10 text-foreground" />
+        ) : showFallback ? (
           <span className="text-2xl font-semibold text-muted-foreground">
             {site.title.charAt(0).toUpperCase()}
           </span>

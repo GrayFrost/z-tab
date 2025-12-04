@@ -7,7 +7,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Search, Globe, CircleDot } from 'lucide-react'
+import { Search } from 'lucide-react'
+import { BrandGoogle, BrandBaidu } from '@/svg/icon-collection'
 
 type SearchEngine = 'google' | 'baidu'
 
@@ -46,19 +47,19 @@ export function SearchBar() {
           value={searchEngine}
           onValueChange={(value: SearchEngine) => setSearchEngine(value)}
         >
-          <SelectTrigger className="w-[110px] h-9 border-0 bg-transparent hover:bg-muted/50 rounded-lg focus:ring-0 focus:ring-offset-0 px-3 transition-colors">
+          <SelectTrigger className="w-[130px] h-9 border-0 bg-transparent hover:bg-muted/50 rounded-lg focus:ring-0 focus:ring-offset-0 px-3 transition-colors">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent align="start" className="min-w-[110px]">
-            <SelectItem value="google" className="cursor-pointer pl-3">
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-muted-foreground" />
+          <SelectContent align="start" className="min-w-[130px]">
+            <SelectItem value="google" className="cursor-pointer">
+              <div className="flex items-center gap-2.5">
+                <BrandGoogle className="w-4 h-4 text-muted-foreground" />
                 <span>Google</span>
               </div>
             </SelectItem>
-            <SelectItem value="baidu" className="cursor-pointer pl-3">
-              <div className="flex items-center gap-2">
-                <CircleDot className="w-4 h-4 text-muted-foreground" />
+            <SelectItem value="baidu" className="cursor-pointer">
+              <div className="flex items-center gap-2.5">
+                <BrandBaidu className="w-4 h-4 text-muted-foreground" />
                 <span>百度</span>
               </div>
             </SelectItem>
