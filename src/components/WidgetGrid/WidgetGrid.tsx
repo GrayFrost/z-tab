@@ -143,7 +143,6 @@ export function WidgetGrid() {
           margin={[GRID_MARGIN, GRID_MARGIN]}
           containerPadding={[0, 0]}
           onLayoutChange={handleLayoutChange}
-          draggableHandle=".cursor-move"
           isResizable={true}
           isDraggable={true}
           useCSSTransforms={true}
