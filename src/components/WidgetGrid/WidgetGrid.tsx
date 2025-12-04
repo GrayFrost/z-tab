@@ -190,41 +190,55 @@ export function WidgetGrid() {
       console.error('Failed to save site:', error)
     }
 
+    // 为新 item 创建 layout，放到 add-site 按钮的位置
+    // 然后把 add-site 按钮往后挪
+    const addSiteLayout = layout.find(l => l.i === 'add-site')
+    const newLayout = [...layout]
+    
+    // 新 item 的 layout
+    const newItemLayout: Layout = {
+      i: newSite.id,
+      x: addSiteLayout?.x ?? 0,
+      y: addSiteLayout?.y ?? 0,
+      w: 1,
+      h: 1,
+      minW: 1,
+      minH: 1,
+      maxW: GRID_COLS,
+      maxH: 4,
+      isResizable: false, // 1x1 不可缩放
+      isDraggable: true,
+    }
+    
+    // 如果找到了 add-site 的布局，把它移到新位置
+    if (addSiteLayout) {
+      // 计算 add-site 按钮新位置（往后移一格）
+      let newX = addSiteLayout.x + 1
+      let newY = addSiteLayout.y
+      if (newX >= GRID_COLS) {
+        newX = 0
+        newY += 1
+      }
+      // 更新 add-site 按钮的位置
+      const addSiteLayoutIndex = newLayout.findIndex(l => l.i === 'add-site')
+      if (addSiteLayoutIndex !== -1) {
+        newLayout[addSiteLayoutIndex] = {
+          ...newLayout[addSiteLayoutIndex],
+          x: newX,
+          y: newY,
+        }
+      }
+    }
+    
+    newLayout.push(newItemLayout)
+
     setItems(newItems)
-    // 生成新布局时，需要考虑现有布局
-    // 简单的做法是让 react-grid-layout 处理新加入的 item（它会自动放到最后）
-    // 这里重新生成布局可能会打乱之前的顺序，所以我们不应该完全重新 generateLayout
-    // 我们只需要把新的 items 传给 GridLayout，它会自动处理新增项。
-    // 但为了确保状态同步，我们可以在这里更新 layout state，保留原有的，为新的添加默认位置
+    setLayout(newLayout)
     
-    // 实际上，如果不显式更新 layout，GridLayout 会自动添加新 item 到底部。
-    // 但为了能够持久化，我们需要获取到新的 layout。handleLayoutChange 会被触发吗？
-    // 添加 item 后，GridLayout 会触发 onLayoutChange。所以这里我们其实不需要手动 generateLayout
-    // 除非我们需要控制新 item 的初始位置。
-    
-    // 既然之前的代码是全量重新 generate，这会导致重置。
-    // 我们应该只添加新 item 到 layout，或者让 GridLayout 自己处理。
-    // 这里为了稳妥，我们先不手动调用 setLayout(generateLayout)，而是让 GridLayout 自动处理
-    // 或者我们手动计算新 item 的位置。
-    
-    // 简化处理：我们只更新 items。GridLayout 会检测到新 item，如果 layout 中没有对应的 i，
-    // 它会自动添加到 (0,0) 或第一个空位。然后触发 onLayoutChange，我们在那里保存。
-    
-    // *修正*：之前的代码在 handleAddSite 里调用了 generateLayout，这会重置所有位置！
-    // 我们应该移除这里的 setLayout 调用，或者智能合并。
-    // 但 items 变了，如果不传新的 layout prop，可能会有问题。
-    // 其实 react-grid-layout 只要 key 匹配，会自动保留已知 item 的位置。
-    // 对于新 item，我们给它一个初始 layout 数据。
-    
-    // 找到合适的位置太复杂，这里先不传，让库自己找。
-    // 但我们需要确保不重置旧的。
-    
-    // 之前的逻辑：
-    // setLayout(generateLayout(newItems)) -> 这绝对是重置布局的元凶。
-    
-    // 新的逻辑：只更新 items，不手动重置 layout。
-    // 但为了更好的体验，我们可以把新 item 放到 add-site 按钮之前的位置（如果可能）。
-    // 简单起见，这里只 setUrlInput 和 setDialogOpen，layout 更新交给 handleLayoutChange 回调。
+    // 保存布局
+    db.settings.set(LAYOUT_STORAGE_KEY, newLayout).catch(err => {
+      console.error('Failed to save layout:', err)
+    })
     
     setUrlInput('')
     setDialogOpen(false)
