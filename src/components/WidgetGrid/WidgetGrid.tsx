@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import GridLayout, { Layout } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -7,7 +7,8 @@ import type { GridItem, SiteItem, WidgetItem } from './types'
 import { isSiteItem, isAddSiteItem } from './types'
 import { GRID_COLS, GRID_MARGIN, GRID_WIDTH, ROW_HEIGHT, sizeToGrid } from './constants'
 import { getFaviconUrl, getSiteName } from './utils/favicon'
-import { saveSites, loadSites } from './utils/storage'
+import { loadSites } from './utils/storage' // 仅用于迁移数据
+import { db } from '@/lib/db'
 import { WidgetCard, SiteCard, AddSiteCard } from './widgets'
 import { AddSiteDialog } from './AddSiteDialog'
 import { presetSites, fixedWidgets, iconMap } from './data'
@@ -67,50 +68,59 @@ function restoreIcons(sites: SiteItem[]): SiteItem[] {
   })
 }
 
-// 初始化数据
-function getInitialItems(): GridItem[] {
-  const loadedSites = loadSites()
-  
-  // 如果 localStorage 中没有数据（返回空数组且 key 不存在），说明是首次访问
-  // 这里我们需要判断 localStorage 是否真的为空，因为 loadSites 在出错或为空时都返回 []
-  // 简单的判断方式是检查 localStorage.getItem('z-tab-sites') 是否为 null
-  // 但由于 loadSites 封装了 storage 访问，我们暂时假定如果是空数组且需要预设，就用预设
-  
-  // 更好的做法：直接在组件 mount 时判断，如果 savedSites 为空，则写入预设
-  
-  let sites: SiteItem[] = []
-  
-  // 检查 localStorage 是否有数据
-  const savedData = localStorage.getItem('z-tab-sites')
-  
-  // 如果没有数据，或者数据为空数组，都使用预设站点
-  // 注意：这会覆盖用户手动清空所有站点的情况，如果用户想保持空列表，这种策略可能不合适
-  // 但在开发阶段或者为了推广预设站点，这是可行的
-  if (!savedData || savedData === '[]') {
-    // 首次访问或列表为空，使用预设站点
-    sites = [...presetSites]
-    // 立即保存到 localStorage
-    saveSites(sites)
-  } else {
-    // 从 localStorage 加载并恢复图标
-    sites = restoreIcons(loadedSites)
-  }
-
-  return [...sites, ...fixedWidgets]
-}
-
 export function WidgetGrid() {
-  const initialItems = useMemo(() => getInitialItems(), [])
-  const [items, setItems] = useState<GridItem[]>(initialItems)
-  const [layout, setLayout] = useState<Layout[]>(() => generateLayout(initialItems))
+  const [items, setItems] = useState<GridItem[]>([])
+  const [layout, setLayout] = useState<Layout[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [urlInput, setUrlInput] = useState('')
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  // 初始化数据加载
+  useEffect(() => {
+    const initData = async () => {
+      try {
+        // 1. 尝试从 IndexedDB 加载
+        let sites = await db.sites.getAll()
+        
+        // 2. 如果 DB 为空，检查 localStorage 是否有数据（迁移旧数据）
+        if (sites.length === 0) {
+          const localData = loadSites() // 这里是旧的 localStorage 方法
+          if (localData.length > 0) {
+            console.log('Migrating data from localStorage to IndexedDB...')
+            sites = localData
+            await db.sites.saveAll(sites)
+            // 可选：迁移后清除 localStorage
+            // localStorage.removeItem('z-tab-sites')
+          } else {
+            // 3. 如果都没有数据，使用预设数据
+            console.log('Initializing with preset sites...')
+            sites = [...presetSites]
+            await db.sites.saveAll(sites)
+          }
+        }
+
+        // 4. 恢复图标并设置状态
+        const restoredSites = restoreIcons(sites)
+        const initialItems = [...restoredSites, ...fixedWidgets]
+        setItems(initialItems)
+        setLayout(generateLayout(initialItems))
+      } catch (error) {
+        console.error('Failed to initialize data:', error)
+        // 出错时降级显示添加按钮
+        setItems([...fixedWidgets])
+      } finally {
+        setIsInitialized(true)
+      }
+    }
+
+    initData()
+  }, [])
 
   const handleLayoutChange = (newLayout: Layout[]) => {
     setLayout(newLayout)
   }
 
-  const handleAddSite = () => {
+  const handleAddSite = async () => {
     if (!urlInput.trim()) return
 
     // 确保 URL 有协议前缀
@@ -131,16 +141,18 @@ export function WidgetGrid() {
     // 在 add-site 按钮之前插入新网站
     const addSiteIndex = items.findIndex(item => item.type === 'add-site')
     const newItems = [...items]
-    // 如果没有找到 add-site 按钮（不应该发生），则添加到末尾
     if (addSiteIndex !== -1) {
       newItems.splice(addSiteIndex, 0, newSite)
     } else {
       newItems.push(newSite)
     }
 
-    // 保存所有 site 类型的项目到 localStorage
-    const allSites = newItems.filter(item => item.type === 'site') as SiteItem[]
-    saveSites(allSites)
+    // 保存到 IndexedDB
+    try {
+      await db.sites.add(newSite)
+    } catch (error) {
+      console.error('Failed to save site:', error)
+    }
 
     setItems(newItems)
     setLayout(generateLayout(newItems))
@@ -148,12 +160,18 @@ export function WidgetGrid() {
     setDialogOpen(false)
   }
 
-  const handleDeleteItem = (id: string) => {
+  const handleDeleteItem = async (id: string) => {
     const newItems = items.filter(item => item.id !== id)
     
-    // 如果删除的是网站，同步更新 localStorage
-    const allSites = newItems.filter(item => item.type === 'site') as SiteItem[]
-    saveSites(allSites)
+    // 如果删除的是网站，同步更新 IndexedDB
+    const itemToDelete = items.find(item => item.id === id)
+    if (itemToDelete && isSiteItem(itemToDelete)) {
+      try {
+        await db.sites.delete(id)
+      } catch (error) {
+        console.error('Failed to delete site:', error)
+      }
+    }
 
     setItems(newItems)
     setLayout(generateLayout(newItems))
@@ -167,6 +185,10 @@ export function WidgetGrid() {
       return <SiteCard site={item} onDelete={() => handleDeleteItem(item.id)} />
     }
     return <WidgetCard widget={item as WidgetItem} onDelete={() => handleDeleteItem(item.id)} />
+  }
+
+  if (!isInitialized) {
+    return <div className="w-full mt-12 flex justify-center opacity-0">Loading...</div>
   }
 
   return (
@@ -203,4 +225,3 @@ export function WidgetGrid() {
     </div>
   )
 }
-
