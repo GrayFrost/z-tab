@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Trash2 } from 'lucide-react'
 import type { SiteItem } from '../types'
 import { getNextFaviconUrl } from '../utils/favicon'
+import { getCachedFavicon, cacheFavicon, imageToBase64 } from '../utils/storage'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -15,8 +16,32 @@ interface SiteCardProps {
 }
 
 export function SiteCard({ site, onDelete }: SiteCardProps) {
-  const [currentFavicon, setCurrentFavicon] = useState(site.favicon)
+  // 优先使用缓存的 base64 favicon
+  const cachedFavicon = getCachedFavicon(site.url)
+  const [currentFavicon, setCurrentFavicon] = useState(cachedFavicon || site.favicon)
   const [showFallback, setShowFallback] = useState(false)
+  const hasCached = useRef(!!cachedFavicon)
+
+  // 后台尝试获取并缓存 favicon（不影响显示）
+  useEffect(() => {
+    if (hasCached.current || currentFavicon.startsWith('data:')) return
+    
+    // 使用隐藏的 img 尝试以 CORS 方式加载
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      const base64 = imageToBase64(img)
+      if (base64) {
+        cacheFavicon(site.url, base64)
+        hasCached.current = true
+        // 可选：立即使用缓存的版本
+        // setCurrentFavicon(base64)
+      }
+    }
+    // 静默忽略错误，不影响页面显示
+    img.onerror = () => {}
+    img.src = currentFavicon
+  }, [currentFavicon, site.url])
 
   // 阻止事件冒泡，防止触发拖拽
   const handleMouseDown = (e: React.MouseEvent) => {
