@@ -62,6 +62,9 @@ z-tab/
 └── package.json
 ```
 
+## icon 仓库
+https://svgicons.com/icon-set/tabler-svg-icons
+
 ## License
 
 MIT
