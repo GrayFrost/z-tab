@@ -72,17 +72,17 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
   return (
     <div
       onContextMenu={handleContextMenu}
-      className="relative h-full rounded-2xl bg-card border border-border flex items-center justify-center cursor-grab hover:shadow-lg transition-all overflow-visible select-none"
+      className="relative h-full rounded-2xl bg-card border border-border/50 flex items-center justify-center cursor-grab shadow-sm hover:shadow-md hover:border-border transition-all duration-300 overflow-visible select-none"
     >
       {/* iOS 风格删除按钮 */}
       {showDelete && (
         <button
           onClick={handleDelete}
           onMouseDown={(e) => e.stopPropagation()}
-          className="absolute -top-2 -left-2 z-10 w-6 h-6 bg-destructive hover:bg-destructive/80 rounded-full flex items-center justify-center shadow-md transition-transform hover:scale-110"
+          className="absolute -top-2 -left-2 z-10 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center shadow-sm hover:bg-destructive/90 transition-colors"
           title="删除"
         >
-          <X className="w-4 h-4 text-destructive-foreground" />
+          <X className="w-3.5 h-3.5" />
         </button>
       )}
 
@@ -90,7 +90,7 @@ export function SiteCard({ site, onDelete }: SiteCardProps) {
       <div
         onMouseDown={handleMouseDown}
         onClick={handleClick}
-        className="w-14 h-14 flex items-center justify-center cursor-pointer hover:scale-110 transition-transform rounded-xl"
+        className="w-14 h-14 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200 rounded-xl"
         title={`打开 ${site.title}`}
       >
         {showFallback ? (

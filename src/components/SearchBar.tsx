@@ -40,25 +40,25 @@ export function SearchBar() {
 
   return (
     <div className="w-full max-w-2xl">
-      <div className="flex items-center rounded-xl p-1.5 shadow-lg border border-border bg-card">
+      <div className="flex items-center rounded-xl p-1.5 shadow-sm hover:shadow-md transition-shadow duration-300 border border-border/50 bg-card">
         {/* 搜索引擎选择器 */}
         <Select
           value={searchEngine}
           onValueChange={(value: SearchEngine) => setSearchEngine(value)}
         >
-          <SelectTrigger className="w-[110px] h-9 border-0 bg-muted/50 rounded-lg focus:ring-0 focus:ring-offset-0 px-3">
+          <SelectTrigger className="w-[110px] h-9 border-0 bg-transparent hover:bg-muted/50 rounded-lg focus:ring-0 focus:ring-offset-0 px-3 transition-colors">
             <SelectValue />
           </SelectTrigger>
           <SelectContent align="start" className="min-w-[110px]">
             <SelectItem value="google" className="cursor-pointer pl-3">
               <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
+                <Globe className="w-4 h-4 text-muted-foreground" />
                 <span>Google</span>
               </div>
             </SelectItem>
             <SelectItem value="baidu" className="cursor-pointer pl-3">
               <div className="flex items-center gap-2">
-                <CircleDot className="w-4 h-4" />
+                <CircleDot className="w-4 h-4 text-muted-foreground" />
                 <span>百度</span>
               </div>
             </SelectItem>
@@ -66,7 +66,7 @@ export function SearchBar() {
         </Select>
 
         {/* 分隔线 */}
-        <div className="w-px h-5 bg-border mx-1" />
+        <div className="w-px h-5 bg-border/50 mx-1" />
 
         {/* 搜索输入框 */}
         <div className="flex-1 flex items-center">
@@ -76,11 +76,11 @@ export function SearchBar() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 h-9 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+            className="flex-1 h-9 border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm placeholder:text-muted-foreground/50"
           />
           <button
             onClick={handleSearch}
-            className="h-9 px-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+            className="h-9 w-9 flex items-center justify-center rounded-lg bg-primary/90 text-primary-foreground hover:bg-primary hover:scale-105 active:scale-95 transition-all duration-200"
           >
             <Search className="w-4 h-4" />
           </button>
