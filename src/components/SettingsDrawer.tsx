@@ -32,9 +32,13 @@ export function SettingsDrawer() {
       // 2. 重置主题为 light
       setTheme('light')
 
-      // 3. 关闭抽屉并刷新页面以重新加载预设数据
+      // 3. 关闭抽屉
       setOpen(false)
-      window.location.reload()
+
+      // 4. 等待动画完成后再刷新页面（动画时长约 300ms）
+      setTimeout(() => {
+        window.location.reload()
+      }, 350)
     } catch (error) {
       console.error('Reset failed:', error)
       setIsResetting(false)
