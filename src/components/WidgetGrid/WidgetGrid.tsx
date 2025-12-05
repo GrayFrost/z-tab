@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import GridLayout, { Layout } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
@@ -13,8 +13,13 @@ import { AddSiteDialog } from './AddSiteDialog'
 import { EditFaviconDialog } from './EditFaviconDialog'
 import { presetSites, fixedWidgets, iconMap } from './data'
 
-// 生成布局
-function generateLayout(items: GridItem[]): Layout[] {
+// 每页固定 4 行
+const PAGE_ROWS = 4
+// 每页最多容纳的 1x1 单元格数量
+const CELLS_PER_PAGE = PAGE_ROWS * GRID_COLS
+
+// 生成单页布局（从左到右，从上到下）
+function generatePageLayout(items: GridItem[]): Layout[] {
   let x = 0
   let y = 0
 
@@ -41,7 +46,7 @@ function generateLayout(items: GridItem[]): Layout[] {
       minW: 1,
       minH: 1,
       maxW: GRID_COLS,
-      maxH: 4,
+      maxH: PAGE_ROWS,
       isResizable: !banResize,
       isDraggable: !isStatic,
       static: isStatic,
@@ -57,10 +62,59 @@ function generateLayout(items: GridItem[]): Layout[] {
   })
 }
 
+// 将 items 分成多页
+function paginateItems(items: GridItem[]): GridItem[][] {
+  const pages: GridItem[][] = []
+  let currentPage: GridItem[] = []
+  let currentCells = 0
+
+  // 分离出 add-site 按钮
+  const addSiteItem = items.find((item) => item.type === 'add-site')
+  const otherItems = items.filter((item) => item.type !== 'add-site')
+
+  for (const item of otherItems) {
+    const { w, h } = sizeToGrid[item.size]
+    const cellsNeeded = w * h
+
+    // 如果当前页放不下这个 item，开始新的一页
+    if (currentCells + cellsNeeded > CELLS_PER_PAGE) {
+      if (currentPage.length > 0) {
+        pages.push(currentPage)
+      }
+      currentPage = []
+      currentCells = 0
+    }
+
+    currentPage.push(item)
+    currentCells += cellsNeeded
+  }
+
+  // 处理最后一页和 add-site 按钮
+  if (addSiteItem) {
+    const addSiteCells = 1 // add-site 是 1x1
+    if (currentCells + addSiteCells <= CELLS_PER_PAGE) {
+      // add-site 可以放在当前页
+      currentPage.push(addSiteItem)
+    } else {
+      // 需要新开一页放 add-site
+      if (currentPage.length > 0) {
+        pages.push(currentPage)
+      }
+      currentPage = [addSiteItem]
+    }
+  }
+
+  // 添加最后一页
+  if (currentPage.length > 0) {
+    pages.push(currentPage)
+  }
+
+  return pages.length > 0 ? pages : [[]]
+}
+
 // 恢复站点数据的图标组件
 function restoreIcons(sites: SiteItem[]): SiteItem[] {
   return sites.map((site) => {
-    // 如果 id 在 iconMap 中，恢复图标组件
     if (site.id in iconMap) {
       return { ...site, icon: iconMap[site.id] }
     }
@@ -68,139 +122,85 @@ function restoreIcons(sites: SiteItem[]): SiteItem[] {
   })
 }
 
-// 计算 add-site 按钮的最佳位置（始终在所有其他 widget 后面）
-// 逻辑：找到最后一行，看这一行还有没有空间，有就放后面，没有就另起一行
-function calculateAddSitePosition(layoutWithoutAddSite: Layout[]): { x: number; y: number } {
-  if (layoutWithoutAddSite.length === 0) {
-    return { x: 0, y: 0 }
-  }
+// 根据保存的布局顺序对 items 进行排序
+function sortItemsByLayout(items: GridItem[], savedLayout: Layout[]): GridItem[] {
+  if (!savedLayout || savedLayout.length === 0) return items
 
-  // 1. 找到最大的 y 值（最后一行的行号）
-  let maxY = 0
-  layoutWithoutAddSite.forEach((item) => {
-    // widget 占据的最底部行 = y + h - 1
-    maxY = Math.max(maxY, item.y + item.h - 1)
+  // 创建一个 id -> 位置 的映射，按照 y * 1000 + x 计算位置值
+  const positionMap = new Map<string, number>()
+  savedLayout.forEach((l) => {
+    positionMap.set(l.i, l.y * 1000 + l.x)
   })
 
-  // 2. 在最后一行，找到被占用的最大 x + w（最右边界）
-  let maxXEndInLastRow = 0
-  layoutWithoutAddSite.forEach((item) => {
-    // 检查这个 widget 是否占据了最后一行
-    // widget 占据的行范围是 [item.y, item.y + item.h - 1]
-    const widgetBottomY = item.y + item.h - 1
-    if (widgetBottomY >= maxY) {
-      // 这个 widget 延伸到了最后一行，记录它的右边界
-      maxXEndInLastRow = Math.max(maxXEndInLastRow, item.x + item.w)
-    }
+  // 分离 add-site 按钮
+  const addSiteItem = items.find((item) => item.type === 'add-site')
+  const otherItems = items.filter((item) => item.type !== 'add-site')
+
+  // 对 items 进行排序
+  const sortedItems = [...otherItems].sort((a, b) => {
+    const posA = positionMap.get(a.id) ?? Infinity
+    const posB = positionMap.get(b.id) ?? Infinity
+    return posA - posB
   })
 
-  // 3. 判断最后一行是否还有空间
-  if (maxXEndInLastRow < GRID_COLS) {
-    // 最后一行还有空间，放在这一行的最后
-    return { x: maxXEndInLastRow, y: maxY }
-  } else {
-    // 最后一行满了，另起一行
-    return { x: 0, y: maxY + 1 }
-  }
-}
-
-// 更新布局中 add-site 按钮的位置
-function repositionAddSiteButton(currentLayout: Layout[]): Layout[] {
-  const layoutWithoutAddSite = currentLayout.filter((l) => l.i !== 'add-site')
-  const addSiteLayout = currentLayout.find((l) => l.i === 'add-site')
-
-  if (!addSiteLayout) return currentLayout
-
-  const { x, y } = calculateAddSitePosition(layoutWithoutAddSite)
-
-  // 如果位置没变，直接返回
-  if (addSiteLayout.x === x && addSiteLayout.y === y) {
-    return currentLayout
+  // add-site 按钮放最后
+  if (addSiteItem) {
+    sortedItems.push(addSiteItem)
   }
 
-  return [...layoutWithoutAddSite, { ...addSiteLayout, x, y }]
+  return sortedItems
 }
 
 const LAYOUT_STORAGE_KEY = 'widget-layout'
 
 export function WidgetGrid() {
   const [items, setItems] = useState<GridItem[]>([])
-  const [layout, setLayout] = useState<Layout[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [urlInput, setUrlInput] = useState('')
   const [isInitialized, setIsInitialized] = useState(false)
+  const [currentPage, setCurrentPage] = useState(0)
 
   // 编辑 favicon 相关状态
   const [editFaviconOpen, setEditFaviconOpen] = useState(false)
   const [editingSite, setEditingSite] = useState<SiteItem | null>(null)
 
+  // 滚动容器引用
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // 分页数据
+  const pages = paginateItems(items)
+  const totalPages = pages.length
+
   // 初始化数据加载
   useEffect(() => {
     const initData = async () => {
       try {
-        // 1. 尝试从 IndexedDB 加载站点数据
         let sites = await db.sites.getAll()
-        let shouldResetLayout = false // 标记是否需要重置布局
+        let shouldResetLayout = false
 
-        // 2. 如果 DB 为空，使用预设数据
         if (sites.length === 0) {
           console.log('Initializing with preset sites...')
           sites = [...presetSites]
-          // 保存到 IndexedDB 前移除 icon（函数不能被序列化）
           const sitesToSave = sites.map(({ icon, ...rest }) => rest) as SiteItem[]
           await db.sites.saveAll(sitesToSave)
-          // 使用预设数据时，需要重置布局
           shouldResetLayout = true
         }
 
-        // 4. 恢复图标并设置初始 Items
         const restoredSites = restoreIcons(sites)
-        const initialItems = [...restoredSites, ...fixedWidgets]
-        setItems(initialItems)
+        let initialItems: GridItem[] = [...restoredSites, ...fixedWidgets]
 
-        // 5. 确定使用的布局
-        let initialLayout: Layout[] = []
-
-        if (shouldResetLayout) {
-          // 使用预设数据时，强制重新生成布局并清除旧的 layout 数据
-          initialLayout = generateLayout(initialItems)
-          await db.settings.set(LAYOUT_STORAGE_KEY, initialLayout)
-        } else {
-          // 尝试加载保存的布局
+        // 尝试加载保存的布局并按布局顺序排序 items
+        if (!shouldResetLayout) {
           const savedLayout = await db.settings.get(LAYOUT_STORAGE_KEY)
-
           if (savedLayout && Array.isArray(savedLayout) && savedLayout.length > 0) {
-            // 过滤掉布局中存在但 items 中不存在的项目
-            const itemIds = new Set(initialItems.map((i) => i.id))
-            const validSavedLayout = savedLayout.filter((l) => itemIds.has(l.i))
-
-            // 检查是否有新添加的 item 没有在保存的布局中
-            const missingLayoutItems = initialItems.filter(
-              (item) => !validSavedLayout.find((l) => l.i === item.id)
-            )
-
-            if (missingLayoutItems.length > 0) {
-              // 为缺失的项目生成默认布局，并合并
-              const defaultLayout = generateLayout(initialItems)
-              initialLayout = [
-                ...validSavedLayout,
-                ...defaultLayout.filter((l) => missingLayoutItems.some((item) => item.id === l.i)),
-              ]
-            } else {
-              initialLayout = validSavedLayout
-            }
-          } else {
-            // 没有保存的布局，生成默认布局
-            initialLayout = generateLayout(initialItems)
+            initialItems = sortItemsByLayout(initialItems, savedLayout)
           }
         }
 
-        setLayout(initialLayout)
+        setItems(initialItems)
       } catch (error) {
         console.error('Failed to initialize data:', error)
-        // 出错时降级显示
         setItems([...fixedWidgets])
-        setLayout(generateLayout([...fixedWidgets]))
       } finally {
         setIsInitialized(true)
       }
@@ -209,20 +209,33 @@ export function WidgetGrid() {
     initData()
   }, [])
 
-  const handleLayoutChange = (newLayout: Layout[]) => {
-    // 每次布局变化后，重新定位 add-site 按钮到正确位置
-    const adjustedLayout = repositionAddSiteButton(newLayout)
-    setLayout(adjustedLayout)
-    // 保存布局到 IndexedDB
-    db.settings.set(LAYOUT_STORAGE_KEY, adjustedLayout).catch((err) => {
-      console.error('Failed to save layout:', err)
-    })
+  // 处理滚动到指定页（每页宽度 = 100vw）
+  const scrollToPage = (pageIndex: number) => {
+    if (scrollContainerRef.current) {
+      const pageWidth = scrollContainerRef.current.clientWidth // 100vw
+      scrollContainerRef.current.scrollTo({
+        left: pageIndex * pageWidth,
+        behavior: 'smooth',
+      })
+    }
+    setCurrentPage(pageIndex)
+  }
+
+  // 监听滚动更新当前页码
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      const pageWidth = scrollContainerRef.current.clientWidth // 100vw
+      const scrollLeft = scrollContainerRef.current.scrollLeft
+      const newPage = Math.round(scrollLeft / pageWidth)
+      if (newPage !== currentPage && newPage >= 0 && newPage < totalPages) {
+        setCurrentPage(newPage)
+      }
+    }
   }
 
   const handleAddSite = async () => {
     if (!urlInput.trim()) return
 
-    // 确保 URL 有协议前缀
     let url = urlInput.trim()
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = 'https://' + url
@@ -246,71 +259,32 @@ export function WidgetGrid() {
       newItems.push(newSite)
     }
 
-    // 保存到 IndexedDB
     try {
       await db.sites.add(newSite)
     } catch (error) {
       console.error('Failed to save site:', error)
     }
 
-    // 为新 item 创建 layout，放到 add-site 按钮的位置
-    // 然后把 add-site 按钮往后挪
-    const addSiteLayout = layout.find((l) => l.i === 'add-site')
-    const newLayout = [...layout]
-
-    // 新 item 的 layout
-    const newItemLayout: Layout = {
-      i: newSite.id,
-      x: addSiteLayout?.x ?? 0,
-      y: addSiteLayout?.y ?? 0,
-      w: 1,
-      h: 1,
-      minW: 1,
-      minH: 1,
-      maxW: GRID_COLS,
-      maxH: 4,
-      isResizable: false, // 1x1 不可缩放
-      isDraggable: true,
-    }
-
-    // 如果找到了 add-site 的布局，把它移到新位置
-    if (addSiteLayout) {
-      // 计算 add-site 按钮新位置（往后移一格）
-      let newX = addSiteLayout.x + 1
-      let newY = addSiteLayout.y
-      if (newX >= GRID_COLS) {
-        newX = 0
-        newY += 1
-      }
-      // 更新 add-site 按钮的位置
-      const addSiteLayoutIndex = newLayout.findIndex((l) => l.i === 'add-site')
-      if (addSiteLayoutIndex !== -1) {
-        newLayout[addSiteLayoutIndex] = {
-          ...newLayout[addSiteLayoutIndex],
-          x: newX,
-          y: newY,
-        }
-      }
-    }
-
-    newLayout.push(newItemLayout)
-
     setItems(newItems)
-    setLayout(newLayout)
+    setUrlInput('')
+    setDialogOpen(false)
 
-    // 保存布局
-    db.settings.set(LAYOUT_STORAGE_KEY, newLayout).catch((err) => {
+    // 保存新布局
+    const globalLayout = generatePageLayout(newItems)
+    db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
       console.error('Failed to save layout:', err)
     })
 
-    setUrlInput('')
-    setDialogOpen(false)
+    // 如果添加后创建了新页，滚动到新页
+    const newPages = paginateItems(newItems)
+    if (newPages.length > totalPages) {
+      setTimeout(() => scrollToPage(newPages.length - 1), 100)
+    }
   }
 
   const handleDeleteItem = async (id: string) => {
     const newItems = items.filter((item) => item.id !== id)
 
-    // 如果删除的是网站，同步更新 IndexedDB
     const itemToDelete = items.find((item) => item.id === id)
     if (itemToDelete && isSiteItem(itemToDelete)) {
       try {
@@ -320,28 +294,26 @@ export function WidgetGrid() {
       }
     }
 
-    // 删除时，移除对应的 layout，并重新定位 add-site 按钮
-    const layoutWithoutDeleted = layout.filter((l) => l.i !== id)
-    const newLayout = repositionAddSiteButton(layoutWithoutDeleted)
-
     setItems(newItems)
-    setLayout(newLayout)
 
-    // 保存新布局到 IndexedDB
-    try {
-      await db.settings.set(LAYOUT_STORAGE_KEY, newLayout)
-    } catch (error) {
-      console.error('Failed to save layout after delete:', error)
+    // 保存新布局
+    const globalLayout = generatePageLayout(newItems)
+    db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
+      console.error('Failed to save layout:', err)
+    })
+
+    // 如果删除后页数减少，调整当前页
+    const newPages = paginateItems(newItems)
+    if (currentPage >= newPages.length) {
+      setCurrentPage(Math.max(0, newPages.length - 1))
     }
   }
 
-  // 打开编辑 favicon 对话框
   const handleEditFavicon = (site: SiteItem) => {
     setEditingSite(site)
     setEditFaviconOpen(true)
   }
 
-  // 更新 favicon
   const handleUpdateFavicon = async (siteId: string, faviconUrl: string) => {
     const siteIndex = items.findIndex((item) => item.id === siteId && isSiteItem(item))
     if (siteIndex === -1) return
@@ -349,15 +321,13 @@ export function WidgetGrid() {
     const site = items[siteIndex] as SiteItem
     const updatedSite: SiteItem = {
       ...site,
-      customFavicon: faviconUrl || undefined, // 空字符串时清除自定义 favicon
+      customFavicon: faviconUrl || undefined,
     }
 
-    // 更新 items 状态
     const newItems = [...items]
     newItems[siteIndex] = updatedSite
     setItems(newItems)
 
-    // 同步到 IndexedDB（保存时移除 icon）
     try {
       const { icon, ...siteToSave } = updatedSite
       await db.sites.update(siteToSave as SiteItem)
@@ -382,31 +352,126 @@ export function WidgetGrid() {
     return <WidgetCard widget={item as WidgetItem} onDelete={() => handleDeleteItem(item.id)} />
   }
 
+  // 处理页面内布局变化 - 保存布局并更新 items 顺序
+  const handlePageLayoutChange = (pageIndex: number, newLayout: Layout[]) => {
+    // 获取当前页的 items
+    const currentPageItems = pages[pageIndex]
+    if (!currentPageItems) return
+
+    // 根据新布局对当前页的 items 进行排序
+    const sortedPageItems = [...currentPageItems].sort((a, b) => {
+      const layoutA = newLayout.find((l) => l.i === a.id)
+      const layoutB = newLayout.find((l) => l.i === b.id)
+      if (!layoutA || !layoutB) return 0
+      // 按 y * 1000 + x 排序
+      const posA = layoutA.y * 1000 + layoutA.x
+      const posB = layoutB.y * 1000 + layoutB.x
+      return posA - posB
+    })
+
+    // 重建完整的 items 数组
+    const newItems: GridItem[] = []
+    pages.forEach((page, idx) => {
+      if (idx === pageIndex) {
+        // 当前页使用新排序
+        newItems.push(...sortedPageItems.filter((item) => item.type !== 'add-site'))
+      } else {
+        // 其他页保持原样
+        newItems.push(...page.filter((item) => item.type !== 'add-site'))
+      }
+    })
+
+    // add-site 按钮放最后
+    const addSiteItem = items.find((item) => item.type === 'add-site')
+    if (addSiteItem) {
+      newItems.push(addSiteItem)
+    }
+
+    // 检查顺序是否变化
+    const orderChanged = newItems.some((item, idx) => {
+      const oldItem = items.find((i) => i.id === item.id)
+      const oldIdx = items.indexOf(oldItem!)
+      return oldIdx !== idx
+    })
+
+    if (orderChanged) {
+      setItems(newItems)
+
+      // 生成并保存全局布局
+      const globalLayout = generatePageLayout(newItems)
+      db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
+        console.error('Failed to save layout:', err)
+      })
+    }
+  }
+
   if (!isInitialized) {
     return <div className="w-full mt-12 flex justify-center opacity-0">Loading...</div>
   }
 
   return (
-    <div className="w-full mt-12 flex justify-center">
-      <div style={{ width: GRID_WIDTH }}>
-        <GridLayout
-          className="layout"
-          layout={layout}
-          cols={GRID_COLS}
-          rowHeight={ROW_HEIGHT}
-          width={GRID_WIDTH}
-          margin={[GRID_MARGIN, GRID_MARGIN]}
-          containerPadding={[0, 0]}
-          onLayoutChange={handleLayoutChange}
-          isResizable={true}
-          isDraggable={true}
-          useCSSTransforms={true}
+    <div className="w-full h-full flex flex-col items-center">
+      {/* 分页滚动容器 - 每页占满整个视口宽度 */}
+      <div
+        ref={scrollContainerRef}
+        className="flex-1 w-full overflow-x-auto overflow-y-hidden scroll-smooth widget-scroll-container"
+        onScroll={handleScroll}
+        style={{ scrollSnapType: 'x mandatory' }}
+      >
+        <div
+          className="flex h-full"
+          style={{ width: `${totalPages * 100}vw` }}
         >
-          {items.map((item) => (
-            <div key={item.id}>{renderItem(item)}</div>
+          {pages.map((pageItems, pageIndex) => (
+            <div
+              key={pageIndex}
+              className="flex-shrink-0 w-screen h-full flex justify-center items-start pt-8"
+              style={{ scrollSnapAlign: 'start' }}
+            >
+              {/* Grid 容器水平居中，内容从左上开始排列 */}
+              <div style={{ width: GRID_WIDTH }}>
+                <GridLayout
+                  className="layout"
+                  layout={generatePageLayout(pageItems)}
+                  cols={GRID_COLS}
+                  rowHeight={ROW_HEIGHT}
+                  width={GRID_WIDTH}
+                  margin={[GRID_MARGIN, GRID_MARGIN]}
+                  containerPadding={[0, 0]}
+                  onLayoutChange={(layout) => handlePageLayoutChange(pageIndex, layout)}
+                  isResizable={true}
+                  isDraggable={true}
+                  useCSSTransforms={true}
+                  maxRows={PAGE_ROWS}
+                  compactType="horizontal"
+                >
+                  {pageItems.map((item) => (
+                    <div key={item.id}>{renderItem(item)}</div>
+                  ))}
+                </GridLayout>
+              </div>
+            </div>
           ))}
-        </GridLayout>
+        </div>
       </div>
+
+      {/* 分页指示器 */}
+      {totalPages > 1 && (
+        <div className="flex gap-2 py-4">
+          {Array.from({ length: totalPages }).map((_, index) => (
+            <button
+              key={index}
+              onClick={() => scrollToPage(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === currentPage
+                  ? 'bg-foreground/80 w-6'
+                  : 'bg-foreground/20 hover:bg-foreground/40'
+              }`}
+              aria-label={`第 ${index + 1} 页`}
+            />
+          ))}
+        </div>
+      )}
 
       <AddSiteDialog
         open={dialogOpen}

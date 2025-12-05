@@ -141,6 +141,16 @@ body,
   background-image: none !important;
 }
 
+/* 横向滚动容器样式 - 隐藏滚动条，使用分页指示器替代 */
+.widget-scroll-container {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.widget-scroll-container::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
+}
+
 /* Sheet/Drawer 动画 */
 @keyframes fadeIn {
   from {

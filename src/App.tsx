@@ -11,8 +11,14 @@ function App() {
 
       <ThemeToggle />
       <SettingsDrawer />
-      <div className="flex flex-col items-center pt-24 px-4 relative z-10">
+
+      {/* SearchBar 固定区域 */}
+      <div className="flex-shrink-0 flex justify-center pt-[12vh] pb-4 px-4 relative z-10">
         <SearchBar />
+      </div>
+
+      {/* WidgetGrid 分页区域 */}
+      <div className="flex-1 overflow-hidden relative z-10">
         <WidgetGrid />
       </div>
     </div>
