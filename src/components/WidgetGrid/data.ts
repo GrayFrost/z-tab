@@ -7,6 +7,8 @@ import {
   BrandYoutubeFilled,
   BrandDouban,
   BrandReddit,
+  BrandTaobao,
+  BrandAppleFilled,
 } from '@/svg/icon-collection'
 import type { SiteItem, WidgetItem } from './types'
 import type { ComponentType, SVGProps } from 'react'
@@ -19,6 +21,8 @@ export const iconMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   bilibili: BrandBilibili,
   youtube: BrandYoutubeFilled,
   douban: BrandDouban,
+  taobao: BrandTaobao,
+  apple: BrandAppleFilled,
 }
 
 // 预设网站
@@ -84,6 +88,24 @@ export const presetSites: SiteItem[] = [
     url: 'https://www.reddit.com',
     favicon: '',
     icon: BrandReddit,
+    type: 'site',
+  },
+  {
+    id: 'taobao',
+    size: '1x1',
+    title: '淘宝',
+    url: 'https://www.taobao.com',
+    favicon: '',
+    icon: BrandTaobao,
+    type: 'site',
+  },
+  {
+    id: 'apple',
+    size: '1x1',
+    title: 'Apple',
+    url: 'https://www.apple.com',
+    favicon: '',
+    icon: BrandAppleFilled,
     type: 'site',
   },
 ]
