@@ -59,7 +59,7 @@ export function SiteCard({ site, onDelete, onEditFavicon }: SiteCardProps) {
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setShowMenu(prev => !prev)
+    setShowMenu((prev) => !prev)
   }
 
   // 点击删除按钮

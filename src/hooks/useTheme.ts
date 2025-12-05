@@ -32,7 +32,7 @@ export function useTheme() {
 
   // 切换主题 - 使用函数式更新避免闭包陷阱
   const toggleTheme = useCallback(() => {
-    setThemeState(prevTheme => {
+    setThemeState((prevTheme) => {
       const newTheme = prevTheme === 'light' ? 'dark' : 'light'
       applyTheme(newTheme)
       try {
@@ -63,7 +63,7 @@ export function useTheme() {
   // 监听系统主题变化
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    
+
     const handleChange = (e: MediaQueryListEvent) => {
       try {
         if (!localStorage.getItem(STORAGE_KEY)) {

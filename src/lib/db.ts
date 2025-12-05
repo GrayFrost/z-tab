@@ -42,7 +42,7 @@ export const db = {
       const db = await getDB()
       return db.getAll('sites')
     },
-    
+
     async add(site: SiteItem) {
       const db = await getDB()
       return db.put('sites', site)
@@ -62,14 +62,14 @@ export const db = {
       const db = await getDB()
       const tx = db.transaction('sites', 'readwrite')
       const store = tx.objectStore('sites')
-      
+
       // 清空旧数据
       await store.clear()
-      
+
       // 批量添加新数据
-      await Promise.all(sites.map(site => store.add(site)))
+      await Promise.all(sites.map((site) => store.add(site)))
       await tx.done
-    }
+    },
   },
 
   // 设置相关操作
@@ -78,11 +78,10 @@ export const db = {
       const db = await getDB()
       return db.get('settings', key)
     },
-    
+
     async set(key: string, value: any) {
       const db = await getDB()
       return db.put('settings', value, key)
-    }
-  }
+    },
+  },
 }
-

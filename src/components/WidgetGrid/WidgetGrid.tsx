@@ -59,7 +59,7 @@ function generateLayout(items: GridItem[]): Layout[] {
 
 // 恢复站点数据的图标组件
 function restoreIcons(sites: SiteItem[]): SiteItem[] {
-  return sites.map(site => {
+  return sites.map((site) => {
     // 如果 id 在 iconMap 中，恢复图标组件
     if (site.id in iconMap) {
       return { ...site, icon: iconMap[site.id] }
@@ -77,14 +77,14 @@ function calculateAddSitePosition(layoutWithoutAddSite: Layout[]): { x: number; 
 
   // 1. 找到最大的 y 值（最后一行的行号）
   let maxY = 0
-  layoutWithoutAddSite.forEach(item => {
+  layoutWithoutAddSite.forEach((item) => {
     // widget 占据的最底部行 = y + h - 1
     maxY = Math.max(maxY, item.y + item.h - 1)
   })
 
   // 2. 在最后一行，找到被占用的最大 x + w（最右边界）
   let maxXEndInLastRow = 0
-  layoutWithoutAddSite.forEach(item => {
+  layoutWithoutAddSite.forEach((item) => {
     // 检查这个 widget 是否占据了最后一行
     // widget 占据的行范围是 [item.y, item.y + item.h - 1]
     const widgetBottomY = item.y + item.h - 1
@@ -106,22 +106,19 @@ function calculateAddSitePosition(layoutWithoutAddSite: Layout[]): { x: number; 
 
 // 更新布局中 add-site 按钮的位置
 function repositionAddSiteButton(currentLayout: Layout[]): Layout[] {
-  const layoutWithoutAddSite = currentLayout.filter(l => l.i !== 'add-site')
-  const addSiteLayout = currentLayout.find(l => l.i === 'add-site')
-  
+  const layoutWithoutAddSite = currentLayout.filter((l) => l.i !== 'add-site')
+  const addSiteLayout = currentLayout.find((l) => l.i === 'add-site')
+
   if (!addSiteLayout) return currentLayout
 
   const { x, y } = calculateAddSitePosition(layoutWithoutAddSite)
-  
+
   // 如果位置没变，直接返回
   if (addSiteLayout.x === x && addSiteLayout.y === y) {
     return currentLayout
   }
 
-  return [
-    ...layoutWithoutAddSite,
-    { ...addSiteLayout, x, y }
-  ]
+  return [...layoutWithoutAddSite, { ...addSiteLayout, x, y }]
 }
 
 const LAYOUT_STORAGE_KEY = 'widget-layout'
@@ -132,7 +129,7 @@ export function WidgetGrid() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [urlInput, setUrlInput] = useState('')
   const [isInitialized, setIsInitialized] = useState(false)
-  
+
   // 编辑 favicon 相关状态
   const [editFaviconOpen, setEditFaviconOpen] = useState(false)
   const [editingSite, setEditingSite] = useState<SiteItem | null>(null)
@@ -144,7 +141,7 @@ export function WidgetGrid() {
         // 1. 尝试从 IndexedDB 加载站点数据
         let sites = await db.sites.getAll()
         let shouldResetLayout = false // 标记是否需要重置布局
-        
+
         // 2. 如果 DB 为空，使用预设数据
         if (sites.length === 0) {
           console.log('Initializing with preset sites...')
@@ -174,18 +171,20 @@ export function WidgetGrid() {
 
           if (savedLayout && Array.isArray(savedLayout) && savedLayout.length > 0) {
             // 过滤掉布局中存在但 items 中不存在的项目
-            const itemIds = new Set(initialItems.map(i => i.id))
-            const validSavedLayout = savedLayout.filter(l => itemIds.has(l.i))
-            
+            const itemIds = new Set(initialItems.map((i) => i.id))
+            const validSavedLayout = savedLayout.filter((l) => itemIds.has(l.i))
+
             // 检查是否有新添加的 item 没有在保存的布局中
-            const missingLayoutItems = initialItems.filter(item => !validSavedLayout.find(l => l.i === item.id))
-            
+            const missingLayoutItems = initialItems.filter(
+              (item) => !validSavedLayout.find((l) => l.i === item.id)
+            )
+
             if (missingLayoutItems.length > 0) {
               // 为缺失的项目生成默认布局，并合并
               const defaultLayout = generateLayout(initialItems)
               initialLayout = [
-                  ...validSavedLayout,
-                  ...defaultLayout.filter(l => missingLayoutItems.some(item => item.id === l.i))
+                ...validSavedLayout,
+                ...defaultLayout.filter((l) => missingLayoutItems.some((item) => item.id === l.i)),
               ]
             } else {
               initialLayout = validSavedLayout
@@ -195,7 +194,7 @@ export function WidgetGrid() {
             initialLayout = generateLayout(initialItems)
           }
         }
-        
+
         setLayout(initialLayout)
       } catch (error) {
         console.error('Failed to initialize data:', error)
@@ -215,8 +214,8 @@ export function WidgetGrid() {
     const adjustedLayout = repositionAddSiteButton(newLayout)
     setLayout(adjustedLayout)
     // 保存布局到 IndexedDB
-    db.settings.set(LAYOUT_STORAGE_KEY, adjustedLayout).catch(err => {
-        console.error('Failed to save layout:', err)
+    db.settings.set(LAYOUT_STORAGE_KEY, adjustedLayout).catch((err) => {
+      console.error('Failed to save layout:', err)
     })
   }
 
@@ -239,7 +238,7 @@ export function WidgetGrid() {
     }
 
     // 在 add-site 按钮之前插入新网站
-    const addSiteIndex = items.findIndex(item => item.type === 'add-site')
+    const addSiteIndex = items.findIndex((item) => item.type === 'add-site')
     const newItems = [...items]
     if (addSiteIndex !== -1) {
       newItems.splice(addSiteIndex, 0, newSite)
@@ -256,9 +255,9 @@ export function WidgetGrid() {
 
     // 为新 item 创建 layout，放到 add-site 按钮的位置
     // 然后把 add-site 按钮往后挪
-    const addSiteLayout = layout.find(l => l.i === 'add-site')
+    const addSiteLayout = layout.find((l) => l.i === 'add-site')
     const newLayout = [...layout]
-    
+
     // 新 item 的 layout
     const newItemLayout: Layout = {
       i: newSite.id,
@@ -273,7 +272,7 @@ export function WidgetGrid() {
       isResizable: false, // 1x1 不可缩放
       isDraggable: true,
     }
-    
+
     // 如果找到了 add-site 的布局，把它移到新位置
     if (addSiteLayout) {
       // 计算 add-site 按钮新位置（往后移一格）
@@ -284,7 +283,7 @@ export function WidgetGrid() {
         newY += 1
       }
       // 更新 add-site 按钮的位置
-      const addSiteLayoutIndex = newLayout.findIndex(l => l.i === 'add-site')
+      const addSiteLayoutIndex = newLayout.findIndex((l) => l.i === 'add-site')
       if (addSiteLayoutIndex !== -1) {
         newLayout[addSiteLayoutIndex] = {
           ...newLayout[addSiteLayoutIndex],
@@ -293,26 +292,26 @@ export function WidgetGrid() {
         }
       }
     }
-    
+
     newLayout.push(newItemLayout)
 
     setItems(newItems)
     setLayout(newLayout)
-    
+
     // 保存布局
-    db.settings.set(LAYOUT_STORAGE_KEY, newLayout).catch(err => {
+    db.settings.set(LAYOUT_STORAGE_KEY, newLayout).catch((err) => {
       console.error('Failed to save layout:', err)
     })
-    
+
     setUrlInput('')
     setDialogOpen(false)
   }
 
   const handleDeleteItem = async (id: string) => {
-    const newItems = items.filter(item => item.id !== id)
-    
+    const newItems = items.filter((item) => item.id !== id)
+
     // 如果删除的是网站，同步更新 IndexedDB
-    const itemToDelete = items.find(item => item.id === id)
+    const itemToDelete = items.find((item) => item.id === id)
     if (itemToDelete && isSiteItem(itemToDelete)) {
       try {
         await db.sites.delete(id)
@@ -322,12 +321,12 @@ export function WidgetGrid() {
     }
 
     // 删除时，移除对应的 layout，并重新定位 add-site 按钮
-    const layoutWithoutDeleted = layout.filter(l => l.i !== id)
+    const layoutWithoutDeleted = layout.filter((l) => l.i !== id)
     const newLayout = repositionAddSiteButton(layoutWithoutDeleted)
-    
+
     setItems(newItems)
     setLayout(newLayout)
-    
+
     // 保存新布局到 IndexedDB
     try {
       await db.settings.set(LAYOUT_STORAGE_KEY, newLayout)
@@ -344,7 +343,7 @@ export function WidgetGrid() {
 
   // 更新 favicon
   const handleUpdateFavicon = async (siteId: string, faviconUrl: string) => {
-    const siteIndex = items.findIndex(item => item.id === siteId && isSiteItem(item))
+    const siteIndex = items.findIndex((item) => item.id === siteId && isSiteItem(item))
     if (siteIndex === -1) return
 
     const site = items[siteIndex] as SiteItem
@@ -373,9 +372,9 @@ export function WidgetGrid() {
     }
     if (isSiteItem(item)) {
       return (
-        <SiteCard 
-          site={item} 
-          onDelete={() => handleDeleteItem(item.id)} 
+        <SiteCard
+          site={item}
+          onDelete={() => handleDeleteItem(item.id)}
           onEditFavicon={() => handleEditFavicon(item)}
         />
       )
@@ -404,9 +403,7 @@ export function WidgetGrid() {
           useCSSTransforms={true}
         >
           {items.map((item) => (
-            <div key={item.id}>
-              {renderItem(item)}
-            </div>
+            <div key={item.id}>{renderItem(item)}</div>
           ))}
         </GridLayout>
       </div>

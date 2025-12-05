@@ -17,12 +17,7 @@ interface EditFaviconDialogProps {
   onSubmit: (siteId: string, faviconUrl: string) => void
 }
 
-export function EditFaviconDialog({
-  open,
-  onOpenChange,
-  site,
-  onSubmit,
-}: EditFaviconDialogProps) {
+export function EditFaviconDialog({ open, onOpenChange, site, onSubmit }: EditFaviconDialogProps) {
   const [faviconUrl, setFaviconUrl] = useState('')
   const [previewError, setPreviewError] = useState(false)
 
@@ -108,8 +103,8 @@ export function EditFaviconDialog({
           )}
 
           <div className="flex justify-between">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={handleClear}
               disabled={!site?.customFavicon}
               className="text-muted-foreground"
@@ -130,4 +125,3 @@ export function EditFaviconDialog({
     </Dialog>
   )
 }
-

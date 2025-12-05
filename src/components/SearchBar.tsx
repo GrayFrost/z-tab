@@ -8,10 +8,10 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Search } from 'lucide-react'
-import { BrandGoogle, BrandBaidu } from '@/svg/icon-collection'
+import { BrandGoogle, BrandBaidu, BrandBing, BrandYahoo } from '@/svg/icon-collection'
 import { db } from '@/lib/db'
 
-type SearchEngine = 'google' | 'baidu'
+type SearchEngine = 'google' | 'baidu' | 'bing' | 'yahoo'
 
 const SEARCH_ENGINE_KEY = 'search-engine'
 
@@ -23,6 +23,14 @@ const searchEngines: Record<SearchEngine, { name: string; url: string }> = {
   baidu: {
     name: '百度',
     url: 'https://www.baidu.com/s?wd=',
+  },
+  bing: {
+    name: 'Bing',
+    url: 'https://www.bing.com/search?q=',
+  },
+  yahoo: {
+    name: 'Yahoo',
+    url: 'https://search.yahoo.com/search?q=',
   },
 }
 
@@ -61,10 +69,7 @@ export function SearchBar() {
     <div className="w-full max-w-2xl">
       <div className="flex items-center rounded-xl p-1.5 shadow-sm hover:shadow-md transition-shadow duration-300 border border-border/50 bg-card">
         {/* 搜索引擎选择器 */}
-        <Select
-          value={searchEngine}
-          onValueChange={handleEngineChange}
-        >
+        <Select value={searchEngine} onValueChange={handleEngineChange}>
           <SelectTrigger className="w-[130px] h-9 border-0 bg-transparent hover:bg-muted/50 rounded-lg focus:ring-0 focus:ring-offset-0 px-3 transition-colors">
             <SelectValue />
           </SelectTrigger>
@@ -79,6 +84,18 @@ export function SearchBar() {
               <div className="flex items-center gap-2.5">
                 <BrandBaidu className="w-4 h-4 text-muted-foreground" />
                 <span>百度</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="bing" className="cursor-pointer">
+              <div className="flex items-center gap-2.5">
+                <BrandBing className="w-4 h-4 text-muted-foreground" />
+                <span>Bing</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="yahoo" className="cursor-pointer">
+              <div className="flex items-center gap-2.5">
+                <BrandYahoo className="w-4 h-4 text-muted-foreground" />
+                <span>Yahoo</span>
               </div>
             </SelectItem>
           </SelectContent>

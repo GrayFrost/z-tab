@@ -33,4 +33,3 @@ export function isSiteItem(item: GridItem): item is SiteItem {
 export function isAddSiteItem(item: GridItem): boolean {
   return item.type === 'add-site'
 }
-

@@ -35,9 +35,7 @@ export function AddSiteDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>添加网站快捷入口</DialogTitle>
-          <DialogDescription>
-            输入网站地址，将会自动获取网站图标
-          </DialogDescription>
+          <DialogDescription>输入网站地址，将会自动获取网站图标</DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4 pt-2">
           <Input
@@ -51,13 +49,10 @@ export function AddSiteDialog({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               取消
             </Button>
-            <Button onClick={onSubmit}>
-              添加
-            </Button>
+            <Button onClick={onSubmit}>添加</Button>
           </div>
         </div>
       </DialogContent>
     </Dialog>
   )
 }
-

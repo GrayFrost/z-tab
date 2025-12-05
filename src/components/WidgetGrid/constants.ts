@@ -16,4 +16,3 @@ export const sizeToGrid: Record<WidgetSize, { w: number; h: number }> = {
   '2x2': { w: 2, h: 2 },
   '4x2': { w: 4, h: 2 },
 }
-

@@ -9,27 +9,21 @@ function copyExtensionFiles() {
     name: 'copy-extension-files',
     closeBundle() {
       const distDir = path.resolve(__dirname, 'dist')
-      
+
       // 复制 manifest.json
-      copyFileSync(
-        path.resolve(__dirname, 'manifest.json'),
-        path.resolve(distDir, 'manifest.json')
-      )
-      
+      copyFileSync(path.resolve(__dirname, 'manifest.json'), path.resolve(distDir, 'manifest.json'))
+
       // 复制图标
       const iconsDir = path.resolve(distDir, 'icons')
       if (!existsSync(iconsDir)) {
         mkdirSync(iconsDir, { recursive: true })
       }
-      
+
       // 如果存在 icon.svg，也复制过去
       if (existsSync(path.resolve(__dirname, 'icon.svg'))) {
-        copyFileSync(
-          path.resolve(__dirname, 'icon.svg'),
-          path.resolve(distDir, 'icon.svg')
-        )
+        copyFileSync(path.resolve(__dirname, 'icon.svg'), path.resolve(distDir, 'icon.svg'))
       }
-    }
+    },
   }
 }
 

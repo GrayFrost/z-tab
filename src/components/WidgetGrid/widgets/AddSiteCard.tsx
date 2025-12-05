@@ -19,4 +19,3 @@ export function AddSiteCard({ onClick }: AddSiteCardProps) {
     </div>
   )
 }
-

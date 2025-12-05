@@ -33,7 +33,7 @@ export function getFaviconUrl(url: string, fallbackIndex = 0): string {
 export function getNextFaviconUrl(url: string, currentFavicon: string): string | null {
   const services = getFaviconServices(url)
   const currentIndex = services.indexOf(currentFavicon)
-  
+
   if (currentIndex >= 0 && currentIndex < services.length - 1) {
     return services[currentIndex + 1]
   }
@@ -50,4 +50,3 @@ export function getSiteName(url: string): string {
     return '网站'
   }
 }
-
