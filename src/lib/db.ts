@@ -83,5 +83,18 @@ export const db = {
       const db = await getDB()
       return db.put('settings', value, key)
     },
+
+    async clear() {
+      const db = await getDB()
+      return db.clear('settings')
+    },
+  },
+
+  // 重置整个数据库（清空所有数据）
+  async resetAll() {
+    const db = await getDB()
+    const tx = db.transaction(['sites', 'settings'], 'readwrite')
+    await Promise.all([tx.objectStore('sites').clear(), tx.objectStore('settings').clear()])
+    await tx.done
   },
 }

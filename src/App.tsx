@@ -1,6 +1,7 @@
 import { SearchBar } from '@/components/SearchBar'
 import { WidgetGrid } from '@/components/WidgetGrid'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { SettingsDrawer } from '@/components/SettingsDrawer'
 
 function App() {
   return (
@@ -9,6 +10,7 @@ function App() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-background to-background pointer-events-none opacity-0 dark:opacity-100 transition-opacity duration-500" />
 
       <ThemeToggle />
+      <SettingsDrawer />
       <div className="flex flex-col items-center pt-24 px-4 relative z-10">
         <SearchBar />
         <WidgetGrid />
