@@ -10,6 +10,7 @@ import { getFaviconUrl, getSiteName } from './utils/favicon'
 import { db } from '@/lib/db'
 import { WidgetCard, SiteCard, AddSiteCard } from './widgets'
 import { AddSiteDialog } from './AddSiteDialog'
+import { EditFaviconDialog } from './EditFaviconDialog'
 import { presetSites, fixedWidgets, iconMap } from './data'
 
 // 生成布局
@@ -131,6 +132,10 @@ export function WidgetGrid() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [urlInput, setUrlInput] = useState('')
   const [isInitialized, setIsInitialized] = useState(false)
+  
+  // 编辑 favicon 相关状态
+  const [editFaviconOpen, setEditFaviconOpen] = useState(false)
+  const [editingSite, setEditingSite] = useState<SiteItem | null>(null)
 
   // 初始化数据加载
   useEffect(() => {
@@ -331,12 +336,49 @@ export function WidgetGrid() {
     }
   }
 
+  // 打开编辑 favicon 对话框
+  const handleEditFavicon = (site: SiteItem) => {
+    setEditingSite(site)
+    setEditFaviconOpen(true)
+  }
+
+  // 更新 favicon
+  const handleUpdateFavicon = async (siteId: string, faviconUrl: string) => {
+    const siteIndex = items.findIndex(item => item.id === siteId && isSiteItem(item))
+    if (siteIndex === -1) return
+
+    const site = items[siteIndex] as SiteItem
+    const updatedSite: SiteItem = {
+      ...site,
+      customFavicon: faviconUrl || undefined, // 空字符串时清除自定义 favicon
+    }
+
+    // 更新 items 状态
+    const newItems = [...items]
+    newItems[siteIndex] = updatedSite
+    setItems(newItems)
+
+    // 同步到 IndexedDB（保存时移除 icon）
+    try {
+      const { icon, ...siteToSave } = updatedSite
+      await db.sites.update(siteToSave as SiteItem)
+    } catch (error) {
+      console.error('Failed to update site favicon:', error)
+    }
+  }
+
   const renderItem = (item: GridItem) => {
     if (isAddSiteItem(item)) {
       return <AddSiteCard onClick={() => setDialogOpen(true)} />
     }
     if (isSiteItem(item)) {
-      return <SiteCard site={item} onDelete={() => handleDeleteItem(item.id)} />
+      return (
+        <SiteCard 
+          site={item} 
+          onDelete={() => handleDeleteItem(item.id)} 
+          onEditFavicon={() => handleEditFavicon(item)}
+        />
+      )
     }
     return <WidgetCard widget={item as WidgetItem} onDelete={() => handleDeleteItem(item.id)} />
   }
@@ -375,6 +417,13 @@ export function WidgetGrid() {
         urlInput={urlInput}
         onUrlInputChange={setUrlInput}
         onSubmit={handleAddSite}
+      />
+
+      <EditFaviconDialog
+        open={editFaviconOpen}
+        onOpenChange={setEditFaviconOpen}
+        site={editingSite}
+        onSubmit={handleUpdateFavicon}
       />
     </div>
   )

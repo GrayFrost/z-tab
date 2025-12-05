@@ -7,11 +7,15 @@ function getFaviconServices(url: string): string[] {
     return [
       // 1. 直接访问网站的 favicon（最可靠）
       `${urlObj.origin}/favicon.ico`,
-      // 2. DuckDuckGo favicon 服务（国内可访问）
+      // 2. Yandex favicon 服务（俄罗斯，国内可访问）
+      `https://favicon.yandex.net/favicon/${domain}`,
+      // 3. Icon Horse - 专业 favicon 服务，有 fallback
+      `https://icon.horse/icon/${domain}`,
+      // 4. DuckDuckGo favicon 服务（国内可能无法访问）
       `https://icons.duckduckgo.com/ip3/${domain}.ico`,
-      // 3. Favicon.im 服务
+      // 5. Favicon.im 服务
       `https://favicon.im/${domain}`,
-      // 4. Google 服务（备用，国内可能无法访问）
+      // 6. Google 服务（备用，国内无法访问）
       `https://www.google.com/s2/favicons?domain=${domain}&sz=64`,
     ]
   } catch {

@@ -18,6 +18,7 @@ export interface SiteItem {
   title: string
   url: string
   favicon: string
+  customFavicon?: string // 用户自定义的 favicon URL
   icon?: ComponentType<SVGProps<SVGSVGElement>>
   type: WidgetType
 }
