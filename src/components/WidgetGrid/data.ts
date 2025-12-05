@@ -9,6 +9,8 @@ import {
   BrandReddit,
   BrandTaobao,
   BrandAppleFilled,
+  BrandWeibo,
+  BrandMedium,
 } from '@/svg/icon-collection'
 import type { SiteItem, WidgetItem } from './types'
 import type { ComponentType, SVGProps } from 'react'
@@ -23,6 +25,8 @@ export const iconMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   douban: BrandDouban,
   taobao: BrandTaobao,
   apple: BrandAppleFilled,
+  weibo: BrandWeibo,
+  medium: BrandMedium,
 }
 
 // 预设网站
@@ -106,6 +110,24 @@ export const presetSites: SiteItem[] = [
     url: 'https://www.apple.com',
     favicon: '',
     icon: BrandAppleFilled,
+    type: 'site',
+  },
+  {
+    id: 'weibo',
+    size: '1x1',
+    title: '微博',
+    url: 'https://www.weibo.com',
+    favicon: '',
+    icon: BrandWeibo,
+    type: 'site',
+  },
+  {
+    id: 'medium',
+    size: '1x1',
+    title: 'Medium',
+    url: 'https://www.medium.com',
+    favicon: '',
+    icon: BrandMedium,
     type: 'site',
   },
 ]

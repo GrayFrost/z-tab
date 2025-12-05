@@ -167,3 +167,15 @@ export function BrandAppleFilled(props: IconProps) {
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-apple-filled SVG Icon</title><path fill="currentColor" d="m15.079 5.999l.239.012c1.43.097 3.434 1.013 4.508 2.586a1 1 0 0 1-.344 1.44c-.05.028-.372.158-.497.217a4.15 4.15 0 0 0-.722.431c-.614.461-.948 1.009-.942 1.694c.01.885.339 1.454.907 1.846c.208.143.436.253.666.33c.126.043.426.116.444.122a1 1 0 0 1 .662.942C20 18.24 16.96 22 14.714 22c-.79 0-1.272-.091-1.983-.315l-.098-.031c-.463-.146-.702-.192-1.133-.192c-.52 0-.863.06-1.518.237l-.197.053c-.575.153-.964.226-1.5.248C5.536 22 3 16.907 3 12.928c0-3.87 1.786-6.92 5.286-6.92c.297 0 .598.045.909.128c.403.107.774.26 1.296.508c.787.374.948.44 1.009.44h.016c.03-.003.128-.047 1.056-.457c1.061-.467 1.864-.685 2.746-.616l-.24-.012zM14 1a1 1 0 0 1 1 1a3 3 0 0 1-3 3a1 1 0 0 1-1-1a3 3 0 0 1 3-3"></path></svg>
   )
 }
+
+export function BrandWeibo(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-weibo SVG Icon</title><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14.127C19 17.2 15.498 20 11 20c-4.126 0-8-2.224-8-5.565c0-1.78.984-3.737 2.7-5.567c2.362-2.51 5.193-3.687 6.551-2.238c.415.44.752 1.39.749 2.062c2-1.615 4.308.387 3.5 2.693c1.26.557 2.5.538 2.5 2.742M15 4h1a5 5 0 0 1 5 5v1"></path></svg>
+  )
+}
+
+export function BrandMedium(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-medium SVG Icon</title><g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"></path><path d="M8 9h1l3 3l3-3h1m-8 6h2m4 0h2M9 9v6m6-6v6"></path></g></svg>
+  )
+}
