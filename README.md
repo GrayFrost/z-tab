@@ -67,6 +67,7 @@ z-tab/
 https://svgicons.com/icon-set/tabler-svg-icons
 https://www.svgrepo.com/collection/company-logo/
 https://tablericons.com/
+https://seeklogo.com/
 
 ## License
 
