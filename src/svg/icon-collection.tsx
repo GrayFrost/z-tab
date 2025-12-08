@@ -179,3 +179,67 @@ export function BrandMedium(props: IconProps) {
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-medium SVG Icon</title><g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"></path><path d="M8 9h1l3 3l3-3h1m-8 6h2m4 0h2M9 9v6m6-6v6"></path></g></svg>
   )
 }
+
+export function BrandDribbble(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-dribbble SVG Icon</title><g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><path d="M21 12c-1.313 0-4.936-.495-8.178.928c-3.522 1.547-6.072 3.946-7.184 5.438"></path><path d="M8.625 3.654c1.409 1.3 4.482 4.61 5.625 7.896c1.143 3.286 1.566 7.326 1.827 8.476"></path><path d="M3.07 10.875c1.7.102 6.2.195 9.08-1.035s5.358-3.492 6.208-4.21"></path><path d="M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18"></path></g></svg>
+  )
+}
+
+export function BrandFigma(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-figma SVG Icon</title><g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><path d="M6 6a3 3 0 0 1 3-3h3v6H9a3 3 0 0 1-3-3m6-3h3a3 3 0 1 1 0 6h-3z"></path><path d="M12 12a3 3 0 1 1 6 0a3 3 0 0 1-6 0m-6 6a3 3 0 0 1 3-3h3v3a3 3 0 0 1-6 0m0-6a3 3 0 0 1 3-3h3v6H9a3 3 0 0 1-3-3"></path></g></svg>
+  )
+}
+
+export function BrandGitlab(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-gitlab SVG Icon</title><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M11.981 21L21 13.708L18.498 3l-3.015 6.497H8.997L5.507 3L3 13.708z"></path></svg>
+  )
+}
+
+export function BrandSpotify(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-spotify SVG Icon</title><g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><circle cx="12" cy="12" r="9"></circle><path strokeMiterlimit="10" d="M6.5 9.284c3.633-1.4 7.77-.9 11 1.3m-9.688 1.8c2.725-1 5.752-.7 8.073 1m-7.165 2c2.018-.8 4.239-.5 6.055.7"></path></g></svg>
+  )
+}
+
+
+export function BrandX(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-x SVG Icon</title><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m18 4l-5 6.667M6 20l5-6.667m2-2.666L8.3 4.4a1 1 0 0 0-.8-.4H4l7 9.333m2-2.666L20 20h-3.5a1 1 0 0 1-.8-.4L11 13.333"></path></svg>
+  )
+}
+
+
+export function BrandGmail(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-gmail SVG Icon</title><g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M16 20h3a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3zM5 20h3V4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1M16 4l-4 4l-4-4"></path><path d="m4 6.5l8 7.5l8-7.5"></path></g></svg>
+  )
+}
+
+
+export function BrandFacebook(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-facebook SVG Icon</title><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 21a9 9 0 1 0 0-18a9 9 0 0 0 0 18m0 0V10a2 2 0 0 1 2-2h1m-.5 4.5h-5"></path></svg>
+  )
+}
+
+export function BrandPinterest(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-pinterest SVG Icon</title><g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><path d="M7.452 13.18c-1.108-2.262.4-6.668 5.472-5.948c5.587.794 4.581 9.478-.077 9.138c-1.474-.107-2.031-1.328-2.177-2.576m0 0c-.11-.946.017-1.907.16-2.41c.244-.857.649-.74.353.393c-.144.552-.32 1.245-.513 2.017m0 0a652.28 652.28 0 0 0-1.63 6.708"></path><circle cx="12" cy="12" r="9"></circle></g></svg>
+  )
+}
+
+
+export function BrandDiscord(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-discord SVG Icon</title><g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"><path d="M8 12a1 1 0 1 0 2 0a1 1 0 0 0-2 0m6 0a1 1 0 1 0 2 0a1 1 0 0 0-2 0"></path><path d="M15.5 17c0 1 1.5 3 2 3c1.5 0 2.833-1.667 3.5-3c.667-1.667.5-5.833-1.5-11.5c-1.457-1.015-3-1.34-4.5-1.5l-.972 1.923a11.913 11.913 0 0 0-4.053 0L9 4c-1.5.16-3.043.485-4.5 1.5c-2 5.667-2.167 9.833-1.5 11.5c.667 1.333 2 3 3.5 3c.5 0 2-2 2-3"></path><path d="M7 16.5c3.5 1 6.5 1 10 0"></path></g></svg>
+  )
+}
+
+export function BrandTwitch(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-twitch SVG Icon</title><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.556 11.1V7.5M20 3H4v14.4h4.444V21L12 17.4h4.444L20 13.8zm-8.889 8.1V7.5z"></path></svg>
+  )
+}
