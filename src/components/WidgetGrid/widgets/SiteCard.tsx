@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { X, Pencil } from 'lucide-react'
 import type { SiteItem } from '../types'
 import { getNextFaviconUrl } from '../utils/favicon'
+import { getIconByStyle } from '../data'
+import { useIconStyle } from '@/contexts/IconStyleContext'
 
 interface SiteCardProps {
   site: SiteItem
@@ -14,6 +16,10 @@ export function SiteCard({ site, onDelete, onEditFavicon }: SiteCardProps) {
   const [currentFavicon, setCurrentFavicon] = useState(site.customFavicon || site.favicon)
   const [showFallback, setShowFallback] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
+  const { iconStyle } = useIconStyle()
+
+  // 根据图标风格获取对应的图标组件
+  const Icon = getIconByStyle(site.id, iconStyle)
 
   // 当 site 变化时更新 favicon
   useEffect(() => {
@@ -84,8 +90,6 @@ export function SiteCard({ site, onDelete, onEditFavicon }: SiteCardProps) {
       setShowFallback(true)
     }
   }
-
-  const Icon = site.icon
 
   return (
     <div

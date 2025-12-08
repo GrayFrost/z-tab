@@ -5,28 +5,33 @@ import {
   BrandJuejin,
   BrandBilibili,
   BrandYoutubeFilled,
+  BrandYoutubeFilledColorful,
   BrandDouban,
   BrandReddit,
   BrandTaobao,
   BrandAppleFilled,
   BrandWeibo,
+  BrandWeiboColorful,
   BrandMedium,
   BrandDribbble,
   BrandFigma,
+  BrandFigmaColorful,
   BrandGitlab,
   BrandSpotify,
   BrandX,
   BrandGmail,
   BrandFacebook,
+  BrandFacebookColorful,
   BrandPinterest,
   BrandDiscord,
   BrandTwitch,
 } from '@/svg/icon-collection'
 import type { SiteItem, WidgetItem } from './types'
 import type { ComponentType, SVGProps } from 'react'
+import type { IconStyle } from '@/contexts/IconStyleContext'
 
-// 图标映射表
-export const iconMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
+// 简约风格图标映射表
+export const minimalIconMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   github: BrandGithub,
   juejin: BrandJuejin,
   v2ex: BrandV2ex,
@@ -49,6 +54,33 @@ export const iconMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   discord: BrandDiscord,
   twitch: BrandTwitch,
 }
+
+// 绚丽风格图标映射表（素材待定，先留空，会自动回退到简约风格）
+export const colorfulIconMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
+  // TODO: 添加绚丽风格的图标组件
+  // github: BrandGithubColorful,
+  // juejin: BrandJuejinColorful,
+  // ...
+  weibo: BrandWeiboColorful,
+  youtube: BrandYoutubeFilledColorful,
+  facebook: BrandFacebookColorful,
+  figma: BrandFigmaColorful,
+}
+
+// 根据风格获取图标
+export function getIconByStyle(
+  id: string,
+  style: IconStyle
+): ComponentType<SVGProps<SVGSVGElement>> | undefined {
+  if (style === 'colorful' && id in colorfulIconMap) {
+    return colorfulIconMap[id]
+  }
+  // 绚丽模式没有对应图标时，回退到简约模式
+  return minimalIconMap[id]
+}
+
+// 兼容旧代码的图标映射表（默认使用简约风格）
+export const iconMap = minimalIconMap
 
 // 预设网站
 export const presetSites: SiteItem[] = [

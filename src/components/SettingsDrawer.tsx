@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { AutoHideButtonsSetting, ResetDataSetting } from '@/components/settings'
+import { AutoHideButtonsSetting, ResetDataSetting, IconStyleSetting } from '@/components/settings'
 
 interface SettingsDrawerProps {
   autoHideButtons: boolean
@@ -46,6 +46,7 @@ export function SettingsDrawer({ autoHideButtons, onAutoHideButtonsChange }: Set
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-foreground">显示设置</h3>
             <AutoHideButtonsSetting value={autoHideButtons} onChange={onAutoHideButtonsChange} />
+            <IconStyleSetting />
           </div>
 
           {/* 数据管理 */}
