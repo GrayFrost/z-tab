@@ -11,6 +11,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState<'home' | 'help'>('home')
   const [autoHideButtons, setAutoHideButtons] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
+  const [isSettingsLoaded, setIsSettingsLoaded] = useState(false)
 
   // 从 IndexedDB 加载设置
   useEffect(() => {
@@ -18,11 +19,12 @@ function App() {
       if (typeof saved === 'boolean') {
         setAutoHideButtons(saved)
       }
+      setIsSettingsLoaded(true)
     })
   }, [])
 
-  // 按钮是否可见：不自动隐藏时始终显示，自动隐藏时只有悬浮才显示
-  const buttonsVisible = !autoHideButtons || isHovering
+  // 按钮是否可见：设置未加载时隐藏，不自动隐藏时始终显示，自动隐藏时只有悬浮才显示
+  const buttonsVisible = isSettingsLoaded && (!autoHideButtons || isHovering)
 
   if (currentPage === 'help') {
     return <HelpPage onBack={() => setCurrentPage('home')} />
