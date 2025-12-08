@@ -1,0 +1,2 @@
+export { BrandX } from './minimal'
+

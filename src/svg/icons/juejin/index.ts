@@ -1,0 +1,2 @@
+export { BrandJuejin } from './minimal'
+

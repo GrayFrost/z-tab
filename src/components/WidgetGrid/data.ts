@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react'
 import {
   BrandGithub,
   BrandV2ex,
+  BrandV2exColorful,
   BrandJuejin,
   BrandBilibili,
   BrandBilibiliColorful,
@@ -73,6 +74,7 @@ export const colorfulIconMap: Record<string, ComponentType<SVGProps<SVGSVGElemen
   dribbble: BrandDribbleColorful,
   douban: BrandDoubanColorful,
   bilibili: BrandBilibiliColorful,
+  v2ex: BrandV2exColorful,
 }
 
 // 根据风格获取图标

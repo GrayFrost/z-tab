@@ -1,0 +1,2 @@
+export { BrandPinterest } from './minimal'
+

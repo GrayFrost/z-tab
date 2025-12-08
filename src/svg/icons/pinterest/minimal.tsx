@@ -1,0 +1,8 @@
+import type { IconProps } from '../types'
+
+export function BrandPinterest(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-pinterest SVG Icon</title><g fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"><path d="M7.452 13.18c-1.108-2.262.4-6.668 5.472-5.948c5.587.794 4.581 9.478-.077 9.138c-1.474-.107-2.031-1.328-2.177-2.576m0 0c-.11-.946.017-1.907.16-2.41c.244-.857.649-.74.353.393c-.144.552-.32 1.245-.513 2.017m0 0a652.28 652.28 0 0 0-1.63 6.708"></path><circle cx="12" cy="12" r="9"></circle></g></svg>
+  )
+}
+

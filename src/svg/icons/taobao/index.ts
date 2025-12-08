@@ -1,0 +1,2 @@
+export { BrandTaobao } from './minimal'
+

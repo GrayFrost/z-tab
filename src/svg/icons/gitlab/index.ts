@@ -1,0 +1,2 @@
+export { BrandGitlab } from './minimal'
+

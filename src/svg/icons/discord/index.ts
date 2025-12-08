@@ -1,0 +1,2 @@
+export { BrandDiscord } from './minimal'
+

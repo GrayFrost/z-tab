@@ -1,0 +1,2 @@
+export { BrandReddit } from './minimal'
+

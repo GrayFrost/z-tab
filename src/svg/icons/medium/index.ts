@@ -1,0 +1,2 @@
+export { BrandMedium } from './minimal'
+

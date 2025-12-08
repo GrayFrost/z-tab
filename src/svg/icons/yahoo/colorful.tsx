@@ -1,0 +1,20 @@
+import type { IconProps } from '../types'
+
+export function BrandYahooColorful(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg"
+      aria-label="Yahoo!" role="img"
+      viewBox="0 0 512 512"
+      fill="#ffffff" {...props}>
+      <rect
+        width="512" height="512"
+        rx="15%"
+        fill="#5f01d1" />
+      <g fill="#ffffff">
+        <path d="M203 404h-62l25-59-69-165h63l37 95 37-95h62m58 76h-69l62-148h69" />
+        <circle cx="303" cy="308" r="38" />
+      </g>
+    </svg>
+  )
+}
+
