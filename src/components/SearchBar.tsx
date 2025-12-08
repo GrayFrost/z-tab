@@ -41,8 +41,8 @@ export function SearchBar() {
   // 从 IndexedDB 加载保存的搜索引擎设置
   useEffect(() => {
     db.settings.get(SEARCH_ENGINE_KEY).then((saved) => {
-      if (saved && (saved === 'google' || saved === 'baidu')) {
-        setSearchEngine(saved)
+      if (saved && saved in searchEngines) {
+        setSearchEngine(saved as SearchEngine)
       }
     })
   }, [])
