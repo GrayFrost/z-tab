@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Settings, RotateCcw, AlertTriangle } from 'lucide-react'
+import { Settings, RotateCcw, AlertTriangle, Eye, EyeOff } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -12,11 +12,21 @@ import { Button } from '@/components/ui/button'
 import { db } from '@/lib/db'
 import { useTheme } from '@/hooks/useTheme'
 
-export function SettingsDrawer() {
+interface SettingsDrawerProps {
+  autoHideButtons: boolean
+  onAutoHideButtonsChange: (value: boolean) => void
+}
+
+export function SettingsDrawer({ autoHideButtons, onAutoHideButtonsChange }: SettingsDrawerProps) {
   const [open, setOpen] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const { setTheme } = useTheme()
+
+  const handleAutoHideChange = (value: boolean) => {
+    onAutoHideButtonsChange(value)
+    db.settings.set('auto-hide-buttons', value)
+  }
 
   const handleReset = async () => {
     if (!showConfirm) {
@@ -57,7 +67,7 @@ export function SettingsDrawer() {
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>
         <button
-          className="fixed top-[72px] right-6 z-50 h-10 w-10 flex items-center justify-center rounded-xl 
+          className="h-10 w-10 flex items-center justify-center rounded-xl 
             bg-card border border-border/50 shadow-sm
             hover:shadow-md hover:scale-105 active:scale-95 
             transition-all duration-300 ease-out
@@ -77,6 +87,42 @@ export function SettingsDrawer() {
         </SheetHeader>
 
         <div className="mt-8 space-y-6">
+          {/* 显示设置 */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-foreground">显示设置</h3>
+            <div className="p-4 rounded-lg border border-border bg-background/50">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    {autoHideButtons ? (
+                      <EyeOff className="w-4 h-4 text-primary" />
+                    ) : (
+                      <Eye className="w-4 h-4 text-primary" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium">自动隐藏按钮</p>
+                    <p className="text-xs text-muted-foreground">
+                      开启后，右侧按钮将在鼠标悬浮时才显示
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleAutoHideChange(!autoHideButtons)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                    autoHideButtons ? 'bg-primary' : 'bg-input'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-background shadow-sm transition-transform ${
+                      autoHideButtons ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* 重置区域 */}
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-foreground">数据管理</h3>

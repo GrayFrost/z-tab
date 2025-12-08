@@ -7,7 +7,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="fixed top-6 right-6 z-50 h-10 w-10 flex items-center justify-center rounded-xl 
+      className="h-10 w-10 flex items-center justify-center rounded-xl 
         bg-card border border-border/50 shadow-sm
         hover:shadow-md hover:scale-105 active:scale-95 
         transition-all duration-300 ease-out
