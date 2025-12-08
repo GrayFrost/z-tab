@@ -1,4 +1,4 @@
-import { ArrowLeft, Search, Globe, Palette, Moon, Sun, Grid3X3, Plus, Settings, GripVertical } from 'lucide-react'
+import { ArrowLeft, Search, Globe, Palette, Grid3X3, Plus, Settings, GripVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 interface HelpPageProps {
