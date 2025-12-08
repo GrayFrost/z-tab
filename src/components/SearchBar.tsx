@@ -8,8 +8,18 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Search } from 'lucide-react'
-import { BrandGoogle, BrandBaidu, BrandBing, BrandYahoo } from '@/svg/icon-collection'
+import {
+  BrandGoogle,
+  BrandGoogleColorful,
+  BrandBaidu,
+  BrandBaiduColorful,
+  BrandBing,
+  BrandBingColorful,
+  BrandYahoo,
+  BrandYahooColorful,
+} from '@/svg/icon-collection'
 import { db } from '@/lib/db'
+import { useIconStyle } from '@/contexts/IconStyleContext'
 
 type SearchEngine = 'google' | 'baidu' | 'bing' | 'yahoo'
 
@@ -34,9 +44,29 @@ const searchEngines: Record<SearchEngine, { name: string; url: string }> = {
   },
 }
 
+// 搜索引擎图标映射
+const searchEngineIcons = {
+  minimal: {
+    google: BrandGoogle,
+    baidu: BrandBaidu,
+    bing: BrandBing,
+    yahoo: BrandYahoo,
+  },
+  colorful: {
+    google: BrandGoogleColorful,
+    baidu: BrandBaiduColorful,
+    bing: BrandBingColorful,
+    yahoo: BrandYahooColorful,
+  },
+}
+
 export function SearchBar() {
   const [searchEngine, setSearchEngine] = useState<SearchEngine>('google')
   const [searchQuery, setSearchQuery] = useState('')
+  const { iconStyle } = useIconStyle()
+
+  // 根据风格获取图标
+  const icons = searchEngineIcons[iconStyle]
 
   // 从 IndexedDB 加载保存的搜索引擎设置
   useEffect(() => {
@@ -76,25 +106,25 @@ export function SearchBar() {
           <SelectContent align="start" className="min-w-[130px]">
             <SelectItem value="google" className="cursor-pointer">
               <div className="flex items-center gap-2.5">
-                <BrandGoogle className="w-4 h-4 text-muted-foreground" />
+                <icons.google className="w-4 h-4 text-muted-foreground" />
                 <span>Google</span>
               </div>
             </SelectItem>
             <SelectItem value="baidu" className="cursor-pointer">
               <div className="flex items-center gap-2.5">
-                <BrandBaidu className="w-4 h-4 text-muted-foreground" />
+                <icons.baidu className="w-4 h-4 text-muted-foreground" />
                 <span>百度</span>
               </div>
             </SelectItem>
             <SelectItem value="bing" className="cursor-pointer">
               <div className="flex items-center gap-2.5">
-                <BrandBing className="w-4 h-4 text-muted-foreground" />
+                <icons.bing className="w-4 h-4 text-muted-foreground" />
                 <span>Bing</span>
               </div>
             </SelectItem>
             <SelectItem value="yahoo" className="cursor-pointer">
               <div className="flex items-center gap-2.5">
-                <BrandYahoo className="w-4 h-4 text-muted-foreground" />
+                <icons.yahoo className="w-4 h-4 text-muted-foreground" />
                 <span>Yahoo</span>
               </div>
             </SelectItem>

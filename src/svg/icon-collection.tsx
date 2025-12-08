@@ -19,6 +19,17 @@ export function BrandBaidu(props: IconProps) {
   )
 }
 
+export function BrandBaiduColorful(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg"
+      aria-label="Baidu" role="img"
+      viewBox="0 0 512 512" {...props}><rect
+        width="512" height="512"
+        rx="15%"
+        fill="#ffffff" /><path d="m131 251c41-9 35-58 34-68-2-17-21-45-48-43-33 3-37 50-37 50-5 22 10 70 51 61m76-82c22 0 40-26 40-58s-18-58-40-58c-23 0-41 26-41 58s18 58 41 58m96 4c31 4 50-28 54-53 4-24-16-52-37-57s-48 29-50 52c-3 27 3 54 33 58m120 41c0-12-10-47-46-47s-41 33-41 57c0 22 2 53 47 52s40-51 40-62m-46 102s-46-36-74-75c-36-57-89-34-106-5-18 29-45 48-49 53-4 4-56 33-44 84 11 52 52 51 52 51s30 3 65-5 65 2 65 2 81 27 104-25c22-53-13-80-13-80" fill="#2319dc" /><path d="m214 266v34h-28s-29 3-39 35c-3 21 4 34 5 36 1 3 10 19 33 23h53v-128zm-1 107h-21s-15-1-19-18c-3-7 0-16 1-20 1-3 6-11 17-14h22zm38-70v68s1 17 24 23h61v-91h-26v68h-25s-8-1-10-7v-61z" fill="#ffffff" /></svg>
+  )
+}
+
 export function BrandGoogle(props: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}>
@@ -32,6 +43,12 @@ export function BrandGoogle(props: IconProps) {
         d="M20.945 11a9 9 0 1 1-3.284-5.997l-2.655 2.392A5.5 5.5 0 1 0 17.125 14H13v-3z"
       ></path>
     </svg>
+  )
+}
+
+export function BrandGoogleColorful(props: IconProps) {
+  return (
+    <svg width="40" height="40" viewBox="-3 0 262 262" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid" {...props}><path d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027" fill="#4285F4" /><path d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1" fill="#34A853" /><path d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782" fill="#FBBC05" /><path d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251" fill="#EB4335" /></svg>
   )
 }
 
@@ -139,6 +156,17 @@ export function BrandBing(props: IconProps) {
   )
 }
 
+export function BrandBingColorful(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg"
+      aria-label="Bing" role="img"
+      viewBox="0 0 512 512" {...props}><rect
+        width="512" height="512"
+        rx="15%"
+        fill="#ffffff" /><path d="M145,73l73,26V356l103-59-50-24-32-79,162,57v83L218,439l-73-41Z" fill="#008373" /></svg>
+  )
+}
+
 export function BrandDouban(props: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}>
@@ -170,6 +198,24 @@ export function BrandReddit(props: IconProps) {
 export function BrandYahoo(props: IconProps) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" {...props}><title>Brand-yahoo SVG Icon</title><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6h5M7 18h7M4.5 6l5.5 7v5m0-5l6-5m-3.5 0h5m2.5 3v4m0 3v.01"></path></svg>
+  )
+}
+
+export function BrandYahooColorful(props: IconProps) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg"
+      aria-label="Yahoo!" role="img"
+      viewBox="0 0 512 512"
+      fill="#ffffff" {...props}>
+      <rect
+        width="512" height="512"
+        rx="15%"
+        fill="#5f01d1" />
+      <g fill="#ffffff">
+        <path d="M203 404h-62l25-59-69-165h63l37 95 37-95h62m58 76h-69l62-148h69" />
+        <circle cx="303" cy="308" r="38" />
+      </g>
+    </svg>
   )
 }
 
