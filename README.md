@@ -2,6 +2,8 @@
 
 一个使用 React + shadcn/ui 构建的 Chrome 新标签页扩展。
 
+![Z-Tab 预览图](./docs/images/z-tab.png)
+
 ## 技术栈
 
 - ⚛️ React 18
