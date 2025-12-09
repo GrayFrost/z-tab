@@ -14,7 +14,7 @@ export { BrandBing, BrandBingColorful } from './bing'
 export { BrandYahoo, BrandYahooColorful } from './yahoo'
 
 // GitHub
-export { BrandGithub } from './github'
+export { BrandGithub, BrandGithubColorful } from './github'
 
 // V2EX
 export { BrandV2ex, BrandV2exColorful } from './v2ex'
@@ -38,7 +38,7 @@ export { BrandReddit } from './reddit'
 export { BrandTaobao } from './taobao'
 
 // Apple
-export { BrandAppleFilled } from './apple'
+export { BrandAppleFilled, BrandAppleFilledColorful } from './apple'
 
 // 微博
 export { BrandWeibo, BrandWeiboColorful } from './weibo'
@@ -53,7 +53,7 @@ export { BrandDribbble, BrandDribbleColorful } from './dribbble'
 export { BrandFigma, BrandFigmaColorful } from './figma'
 
 // GitLab
-export { BrandGitlab } from './gitlab'
+export { BrandGitlab, BrandGitlabColorful } from './gitlab'
 
 // Spotify
 export { BrandSpotify, BrandSpotifyColorful } from './spotify'
@@ -62,7 +62,7 @@ export { BrandSpotify, BrandSpotifyColorful } from './spotify'
 export { BrandX } from './x'
 
 // Gmail
-export { BrandGmail } from './gmail'
+export { BrandGmail, BrandGmailColorful } from './gmail'
 
 // Facebook
 export { BrandFacebook, BrandFacebookColorful } from './facebook'
@@ -74,5 +74,5 @@ export { BrandPinterest } from './pinterest'
 export { BrandDiscord } from './discord'
 
 // Twitch
-export { BrandTwitch } from './twitch'
+export { BrandTwitch, BrandTwitchColorful } from './twitch'
 

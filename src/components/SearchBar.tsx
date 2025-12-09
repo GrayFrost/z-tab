@@ -17,7 +17,7 @@ import {
   BrandBingColorful,
   BrandYahoo,
   BrandYahooColorful,
-} from '@/svg/icon-collection'
+} from '@/svg/icons'
 import { db } from '@/lib/db'
 import { useIconStyle } from '@/contexts/IconStyleContext'
 
