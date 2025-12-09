@@ -1,6 +1,8 @@
 # Z-Tab
 
-一个使用 React + shadcn/ui 构建的 Chrome 新标签页扩展。  
+一个使用 React + shadcn/ui 构建的 Chrome 新标签页扩展。
+最近看到一些关于某些标签页插件投毒的消息，所以萌生了自己开发的想法。  
+本插件纯前端开发，所有配置数据都保存在本地，未来也不打算接入接口服务。    
 这是一个AI Vibe Coding产品，开源免费，欢迎各位标签页爱好者fork自定义创造。
 
 ![Z-Tab 预览图](./docs/images/z-tab.png)
@@ -67,10 +69,16 @@ z-tab/
 
 ## icon 仓库
 
-https://svgicons.com/icon-set/tabler-svg-icons
-https://www.svgrepo.com/collection/company-logo/
-https://tablericons.com/
-https://seeklogo.com/
+- https://svgicons.com/icon-set/tabler-svg-icons
+- https://www.svgrepo.com/collection/company-logo/
+- https://tablericons.com/
+- https://seeklogo.com/
+
+## TODO
+
+- [ ] '2x1' | '2x2' | '4x2' 尺寸组件实现
+- [ ] 不同的物料组件
+- [ ] 配置的导出与导入
 
 ## License
 
