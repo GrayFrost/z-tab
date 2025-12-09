@@ -4,19 +4,32 @@ import type { SiteItem } from '../types'
 import { getNextFaviconUrl } from '../utils/favicon'
 import { getIconByStyle } from '../data'
 import { useIconStyle } from '@/contexts/IconStyleContext'
+import { useDragAndClick } from '@/hooks/useDragAndClick'
 
 interface SiteCardProps {
   site: SiteItem
   onDelete?: () => void
   onEditFavicon?: () => void
+  isDraggingRef?: React.MutableRefObject<boolean>
 }
 
-export function SiteCard({ site, onDelete, onEditFavicon }: SiteCardProps) {
+export function SiteCard({ site, onDelete, onEditFavicon, isDraggingRef }: SiteCardProps) {
   // 优先使用 customFavicon
   const [currentFavicon, setCurrentFavicon] = useState(site.customFavicon || site.favicon)
   const [showFallback, setShowFallback] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const { iconStyle } = useIconStyle()
+
+  // 使用拖拽和点击检测 hook
+  const { handleMouseDown } = useDragAndClick({
+    onClick: () => {
+      if (!showMenu) {
+        window.open(site.url, '_blank')
+      }
+    },
+    isDraggingRef,
+    disabled: showMenu,
+  })
 
   // 根据图标风格获取对应的图标组件
   const Icon = getIconByStyle(site.id, iconStyle)
@@ -48,18 +61,6 @@ export function SiteCard({ site, onDelete, onEditFavicon }: SiteCardProps) {
     }
   }, [showMenu])
 
-  // 阻止事件冒泡，防止触发拖拽
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation()
-  }
-
-  // 点击打开网站
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!showMenu) {
-      window.open(site.url, '_blank')
-    }
-  }
 
   // 右键显示/隐藏菜单
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -94,7 +95,8 @@ export function SiteCard({ site, onDelete, onEditFavicon }: SiteCardProps) {
   return (
     <div
       onContextMenu={handleContextMenu}
-      className="relative h-full rounded-2xl bg-card border border-border/50 flex items-center justify-center cursor-grab shadow-sm hover:shadow-md hover:border-border transition-all duration-300 overflow-visible select-none"
+      onMouseDown={handleMouseDown}
+      className="relative h-full rounded-2xl bg-card border border-border/50 flex items-center justify-center cursor-grab active:cursor-grabbing shadow-sm hover:shadow-md hover:border-border transition-all duration-300 overflow-visible select-none"
     >
       {/* 右键菜单按钮 */}
       {showMenu && (
@@ -120,11 +122,9 @@ export function SiteCard({ site, onDelete, onEditFavicon }: SiteCardProps) {
         </>
       )}
 
-      {/* 可点击的中心区域 */}
+      {/* 中心区域 - 现在整个卡片都可以拖拽和点击 */}
       <div
-        onMouseDown={handleMouseDown}
-        onClick={handleClick}
-        className="w-14 h-14 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200 rounded-xl"
+        className="w-14 h-14 flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 transition-transform duration-200 rounded-xl pointer-events-none"
         title={`打开 ${site.title}`}
       >
         {Icon ? (

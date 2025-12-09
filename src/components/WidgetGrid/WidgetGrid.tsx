@@ -42,6 +42,10 @@ export function WidgetGrid() {
   const [editFaviconOpen, setEditFaviconOpen] = useState(false)
   const [editingSite, setEditingSite] = useState<SiteItem | null>(null)
 
+  // 拖拽状态追踪 - 用于区分点击和拖拽
+  const isDraggingRef = useRef(false)
+  const dragStartTimeRef = useRef<number | null>(null)
+
   // 滚动容器引用
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -224,10 +228,26 @@ export function WidgetGrid() {
           site={item}
           onDelete={() => handleDeleteItem(item.id)}
           onEditFavicon={() => handleEditFavicon(item)}
+          isDraggingRef={isDraggingRef}
         />
       )
     }
     return <WidgetCard widget={item as WidgetItem} onDelete={() => handleDeleteItem(item.id)} />
+  }
+
+  // 处理拖拽开始
+  const handleDragStart = () => {
+    isDraggingRef.current = true
+    dragStartTimeRef.current = Date.now()
+  }
+
+  // 处理拖拽停止
+  const handleDragStop = () => {
+    // 延迟重置，确保点击事件不会在拖拽后触发
+    setTimeout(() => {
+      isDraggingRef.current = false
+      dragStartTimeRef.current = null
+    }, 100)
   }
 
   // 处理页面内布局变化 - 保存布局并更新 items 顺序
@@ -279,6 +299,8 @@ export function WidgetGrid() {
                   margin={[GRID_MARGIN, GRID_MARGIN]}
                   containerPadding={[0, 0]}
                   onLayoutChange={(layout) => handlePageLayoutChange(pageIndex, layout)}
+                  onDragStart={handleDragStart}
+                  onDragStop={handleDragStop}
                   isResizable={true}
                   isDraggable={true}
                   useCSSTransforms={true}
