@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Z-Tab",
+  "version": "1.0.0",
+  "description": "Z-Tab - 你的个性化新标签页",
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "permissions": []
+}
