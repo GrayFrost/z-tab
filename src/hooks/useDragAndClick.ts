@@ -161,7 +161,6 @@ export function useDragAndClick({
       const deltaY = Math.abs(clientY - mouseDownPosRef.current.y)
       const deltaTime = Date.now() - mouseDownPosRef.current.time
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
-      const wasDragging = draggingRef.current
 
       mouseDownPosRef.current = null
 

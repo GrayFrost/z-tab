@@ -1,6 +1,7 @@
 # Z-Tab
 
-一个使用 React + shadcn/ui 构建的 Chrome 新标签页扩展。
+一个使用 React + shadcn/ui 构建的 Chrome 新标签页扩展。  
+这是一个AI Vibe Coding产品，开源免费，欢迎各位标签页爱好者fork自定义创造。
 
 ![Z-Tab 预览图](./docs/images/z-tab.png)
 
