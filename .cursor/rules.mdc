@@ -1,0 +1,21 @@
+# Z-Tab Project Rules
+
+本文件引用项目的需求约束和开发规范。
+
+## 文件说明
+
+- **需求约束**：请参考 `.cursor/requirements.mdc`
+- **开发规范**：请参考 `.cursor/guidelines.mdc`
+
+## 快速参考
+
+### 核心约束
+- 每次数据更新必须同步 IndexedDB
+- 布局变化必须立即保存
+- Widget 必须支持整个区域拖拽和点击
+
+### 核心规范
+- 使用 TypeScript 严格模式
+- 组件使用函数式组件和 Hooks
+- 使用 Tailwind CSS 进行样式设计
+- 所有异步操作必须包含错误处理

@@ -1,0 +1,136 @@
+# Z-Tab 开发规范
+
+## 代码风格
+
+### TypeScript
+- 使用 TypeScript 严格模式
+- 优先使用类型推断，必要时显式声明类型
+- 避免使用 `any`，使用 `unknown` 或具体类型
+- 使用接口（interface）定义对象类型
+
+### React
+- 组件使用函数式组件和 Hooks
+- 使用 `useState`、`useEffect`、`useRef` 等标准 Hooks
+- 自定义 Hooks 以 `use` 开头命名
+- 组件文件使用 PascalCase 命名（如 `SiteCard.tsx`）
+- Hook 文件使用 camelCase 命名（如 `useDragAndClick.ts`）
+
+### 样式
+- 使用 Tailwind CSS 进行样式设计
+- 优先使用 Tailwind 工具类，避免自定义 CSS
+- 使用语义化的类名组合
+- 响应式设计使用 Tailwind 的响应式前缀（sm:, md:, lg:）
+
+### 文件组织
+- 组件放在 `src/components/` 目录下
+- Hooks 放在 `src/hooks/` 目录下
+- 工具函数放在 `src/lib/` 或组件相关的 `utils/` 目录下
+- Context 放在 `src/contexts/` 目录下
+- SVG 图标放在 `src/svg/` 目录下
+
+## 图标管理规范
+
+### 目录结构
+- 每个图标品牌使用独立目录（如 `src/svg/icons/baidu/`）
+- 每个图标目录必须包含：
+  - `minimal.tsx` - 简约风格图标（必需）
+  - `colorful.tsx` - 绚丽风格图标（可选）
+  - `index.ts` - 统一导出文件（必需）
+
+### 图标文件规范
+- **简约图标命名**：`BrandXxx`（如 `BrandBaidu`）
+- **绚丽图标命名**：`BrandXxxColorful`（如 `BrandBaiduColorful`）
+- 图标组件必须接受 `IconProps` 类型（从 `../types` 导入）
+- SVG 属性使用 `{...props}` 展开，支持自定义样式
+
+### 图标导出规范
+- 每个图标目录的 `index.ts` 必须导出：
+  ```typescript
+  export { BrandXxx } from './minimal'
+  export { BrandXxxColorful } from './colorful' // 如果有
+  ```
+- 在 `src/svg/icons/index.ts` 中统一导出所有图标
+- 导出顺序：按字母顺序或按功能分组
+
+### 图标映射规范
+- 在 `src/components/WidgetGrid/data.ts` 中维护图标映射：
+  - `minimalIconMap` - 简约风格图标映射
+  - `colorfulIconMap` - 绚丽风格图标映射
+- 使用 `getIconByStyle(id, style)` 函数获取对应风格的图标
+- 绚丽模式如果没有对应图标，自动回退到简约模式
+
+### 添加新图标流程
+1. 在 `src/svg/icons/` 下创建新目录（如 `newbrand/`）
+2. 创建 `minimal.tsx` 文件，实现简约图标
+3. 创建 `colorful.tsx` 文件，实现绚丽图标（可选）
+4. 创建 `index.ts` 文件，导出图标
+5. 在 `src/svg/icons/index.ts` 中添加导出
+6. 在 `src/components/WidgetGrid/data.ts` 的映射表中添加条目
+
+## Widget 管理规范
+
+### Widget 组件结构
+- Widget 组件放在 `src/components/WidgetGrid/widgets/` 目录下
+- 每个 Widget 组件应该是独立的文件（如 `SiteCard.tsx`、`WidgetCard.tsx`）
+- 在 `widgets/index.ts` 中统一导出所有 Widget 组件
+
+### Widget 类型定义
+- Widget 类型定义在 `src/components/WidgetGrid/types.ts` 中
+- `WidgetItem` - 固定 Widget（如时钟、天气等）
+- `SiteItem` - 网站 Widget（可自定义）
+- `GridItem` - Widget 联合类型
+- 使用类型守卫函数（如 `isSiteItem()`）进行类型判断
+
+### Widget 数据管理
+- 预设数据定义在 `src/components/WidgetGrid/data.ts` 中
+- `presetSites` - 预设网站列表
+- `fixedWidgets` - 固定 Widget 列表
+- `minimalIconMap` / `colorfulIconMap` - 图标映射表
+- `getIconByStyle()` - 根据风格获取图标的工具函数
+
+### Widget 组件规范
+- Widget 组件必须接受标准的 Props 接口
+- 使用 `useDragAndClick` hook 实现拖拽和点击功能
+- Widget 必须支持整个区域拖拽，不能只在特定区域
+- Widget 必须正确处理点击事件，不能与拖拽冲突
+- Widget 删除操作必须同步到 IndexedDB
+
+### Widget 尺寸规范
+- Widget 尺寸使用 `WidgetSize` 类型：`'1x1' | '2x1' | '2x2' | '4x2'`
+- 尺寸映射在 `src/components/WidgetGrid/constants.ts` 中定义
+- 使用 `sizeToGrid` 映射表将尺寸转换为网格单位
+
+### 添加新 Widget 流程
+1. 在 `src/components/WidgetGrid/widgets/` 下创建组件文件
+2. 定义组件的 Props 接口
+3. 实现组件逻辑（包括拖拽、点击、删除等）
+4. 在 `widgets/index.ts` 中导出组件
+5. 在 `data.ts` 中添加预设数据（如果是预设 Widget）
+6. 在 `types.ts` 中添加类型定义（如果需要新类型）
+7. 确保所有数据操作都同步到 IndexedDB
+
+## 代码质量
+
+### 错误处理
+- 所有异步操作必须包含错误处理
+- 使用 try-catch 或 .catch() 处理错误
+- 错误信息应该清晰明确
+- 关键操作失败时应该给用户反馈
+
+### 性能优化
+- 使用 `useMemo` 和 `useCallback` 优化渲染性能
+- 避免不必要的重新渲染
+- 大列表使用虚拟滚动或分页
+- 图片使用懒加载
+
+### 可维护性
+- 函数保持单一职责
+- 组件保持小而专注
+- 提取可复用的逻辑到 Hooks 或工具函数
+- 添加必要的注释，解释复杂逻辑
+
+## 待扩展规范
+- [ ] 组件命名规范
+- [ ] 注释规范
+- [ ] Git 提交规范
+- [ ] 测试规范

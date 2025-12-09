@@ -1,0 +1,46 @@
+# Z-Tab 需求约束
+
+## 数据持久化约束
+
+### IndexedDB 数据同步
+- **强制要求**：每次更新应用状态数据时，必须同步更新 IndexedDB
+- 数据更新包括但不限于：
+  - 添加、删除、修改站点（sites）
+  - 修改布局（layout）
+  - 更新设置（settings）
+  - 修改用户偏好（主题、图标风格等）
+- **同步时机**：在状态更新后立即同步，不要延迟
+- **错误处理**：所有 IndexedDB 操作必须包含错误处理（try-catch 或 .catch()）
+- **示例模式**：
+  ```typescript
+  // ✅ 正确：先更新状态，再同步数据库
+  setItems(newItems)
+  db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
+    console.error('Failed to save layout:', err)
+  })
+  
+  // ❌ 错误：只更新状态，不同步数据库
+  setItems(newItems)
+  ```
+
+### 数据加载约束
+- 应用启动时，优先从 IndexedDB 加载数据
+- 如果 IndexedDB 中没有数据，再使用默认值
+- 加载数据时应该显示加载状态，避免闪烁
+
+## 功能约束
+
+### 拖拽和点击
+- Widget 必须支持整个区域拖拽，不仅仅是特定区域
+- 点击功能必须正常工作，不能与拖拽冲突
+- 使用 `useDragAndClick` hook 实现拖拽和点击检测
+
+### 布局持久化
+- 布局变化必须立即保存到 IndexedDB
+- 拖拽停止时也要保存布局（作为兜底）
+- 刷新页面后布局必须正确恢复
+
+## 待扩展约束
+- [ ] 性能约束
+- [ ] 兼容性约束
+- [ ] 安全约束
