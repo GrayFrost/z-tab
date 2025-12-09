@@ -29,7 +29,7 @@ npm install
 npm run dev
 ```
 
-访问 http://localhost:5173/newtab.html 预览页面
+访问 http://localhost:5173/index.html 预览页面
 
 ### 构建扩展
 
@@ -60,7 +60,7 @@ z-tab/
 │   ├── App.tsx          # 主应用组件
 │   ├── main.tsx         # 入口文件
 │   └── index.css        # 全局样式
-├── newtab.html          # 新标签页 HTML 模板
+├── index.html           # 新标签页 HTML 模板
 ├── manifest.json        # Chrome 扩展配置
 ├── vite.config.ts       # Vite 配置
 ├── tailwind.config.js   # Tailwind 配置
@@ -79,6 +79,7 @@ z-tab/
 - [ ] '2x1' | '2x2' | '4x2' 尺寸组件实现
 - [ ] 不同的物料组件
 - [ ] 配置的导出与导入
+- [ ] 本地图标全彩色化支持
 
 ## License
 
