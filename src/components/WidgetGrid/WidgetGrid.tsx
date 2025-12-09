@@ -247,6 +247,13 @@ export function WidgetGrid() {
     setTimeout(() => {
       isDraggingRef.current = false
       dragStartTimeRef.current = null
+      
+      // 拖拽停止时，确保布局被保存（防止布局丢失）
+      // 使用当前的 items 生成布局并保存
+      const globalLayout = generatePageLayout(items)
+      db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
+        console.error('Failed to save layout on drag stop:', err)
+      })
     }, 100)
   }
 
@@ -254,15 +261,18 @@ export function WidgetGrid() {
   const handlePageLayoutChange = (pageIndex: number, newLayout: Layout[]) => {
     const { newItems, orderChanged } = reorderItemsByPageLayout(items, pages, pageIndex, newLayout)
 
+    // 如果顺序变化，更新 items
     if (orderChanged) {
       setItems(newItems)
-
-      // 生成并保存全局布局
-      const globalLayout = generatePageLayout(newItems)
-      db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
-        console.error('Failed to save layout:', err)
-      })
     }
+
+    // 无论顺序是否变化，都要保存布局（因为位置可能改变了）
+    // 使用最新的 items（如果顺序变化了就用 newItems，否则用当前的 items）
+    const itemsToSave = orderChanged ? newItems : items
+    const globalLayout = generatePageLayout(itemsToSave)
+    db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
+      console.error('Failed to save layout:', err)
+    })
   }
 
   if (!isInitialized) {
