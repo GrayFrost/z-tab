@@ -20,12 +20,15 @@ import {
   BrandGmail,
   BrandGmailColorful,
   BrandJuejin,
+  BrandJuejinColorful,
   BrandMedium,
   BrandPinterest,
   BrandReddit,
+  BrandRedditColorful,
   BrandSpotify,
   BrandSpotifyColorful,
   BrandTaobao,
+  BrandTaobaoColorful,
   BrandTwitch,
   BrandTwitchColorful,
   BrandV2ex,
@@ -68,8 +71,6 @@ export const minimalIconMap: Record<string, ComponentType<SVGProps<SVGSVGElement
 // 绚丽风格图标映射表（素材待定，先留空，会自动回退到简约风格）
 export const colorfulIconMap: Record<string, ComponentType<SVGProps<SVGSVGElement>>> = {
   // TODO: 添加绚丽风格的图标组件
-  // juejin: BrandJuejinColorful,
-  // ...
   apple: BrandAppleFilledColorful,
   bilibili: BrandBilibiliColorful,
   douban: BrandDoubanColorful,
@@ -79,7 +80,10 @@ export const colorfulIconMap: Record<string, ComponentType<SVGProps<SVGSVGElemen
   gitlab: BrandGitlabColorful,
   github: BrandGithubColorful,
   gmail: BrandGmailColorful,
+  juejin: BrandJuejinColorful,
+  reddit: BrandRedditColorful,
   spotify: BrandSpotifyColorful,
+  taobao: BrandTaobaoColorful,
   twitch: BrandTwitchColorful,
   v2ex: BrandV2exColorful,
   weibo: BrandWeiboColorful,

@@ -20,7 +20,7 @@ export { BrandGithub, BrandGithubColorful } from './github'
 export { BrandV2ex, BrandV2exColorful } from './v2ex'
 
 // 掘金
-export { BrandJuejin } from './juejin'
+export { BrandJuejin, BrandJuejinColorful } from './juejin'
 
 // Bilibili
 export { BrandBilibili, BrandBilibiliColorful } from './bilibili'
@@ -32,10 +32,10 @@ export { BrandYoutubeFilled, BrandYoutubeFilledColorful } from './youtube'
 export { BrandDouban, BrandDoubanColorful } from './douban'
 
 // Reddit
-export { BrandReddit } from './reddit'
+export { BrandReddit, BrandRedditColorful } from './reddit'
 
 // 淘宝
-export { BrandTaobao } from './taobao'
+export { BrandTaobao, BrandTaobaoColorful } from './taobao'
 
 // Apple
 export { BrandAppleFilled, BrandAppleFilledColorful } from './apple'
