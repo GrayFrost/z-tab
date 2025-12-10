@@ -28,6 +28,7 @@ function copyExtensionFiles() {
 }
 
 export default defineConfig({
+  base: process.env.GITHUB_ACTIONS ? '/z-tab/' : '/',
   plugins: [react(), copyExtensionFiles()],
   resolve: {
     alias: {
