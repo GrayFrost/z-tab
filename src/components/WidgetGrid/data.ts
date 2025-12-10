@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, Clock } from 'lucide-react'
 import {
   BrandAppleFilled,
   BrandAppleFilledColorful,
@@ -301,4 +301,9 @@ export const presetSites: SiteItem[] = [
 // 固定组件（如添加按钮）
 export const fixedWidgets: WidgetItem[] = [
   { id: 'add-site', size: '1x1', title: '添加网站', icon: Plus, type: 'add-site' },
+]
+
+// 可用的功能类组件列表
+export const availableWidgets: WidgetItem[] = [
+  { id: 'clock', size: '2x1', title: '时钟', icon: Clock, type: 'widget' },
 ]

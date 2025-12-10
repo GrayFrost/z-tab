@@ -1,13 +1,20 @@
 import { openDB, DBSchema, IDBPDatabase } from 'idb'
-import type { SiteItem } from '@/components/WidgetGrid/types'
+import type { SiteItem, WidgetItem } from '@/components/WidgetGrid/types'
 
 const DB_NAME = 'z-tab-db'
 const DB_VERSION = 1
+
+// WidgetItem 存储类型（不包含 icon，因为 icon 是函数无法序列化）
+type StoredWidgetItem = Omit<WidgetItem, 'icon'>
 
 interface ZTabDB extends DBSchema {
   sites: {
     key: string
     value: SiteItem
+  }
+  widgets: {
+    key: string
+    value: StoredWidgetItem
   }
   settings: {
     key: string
@@ -24,6 +31,10 @@ function getDB() {
         // 创建站点存储
         if (!db.objectStoreNames.contains('sites')) {
           db.createObjectStore('sites', { keyPath: 'id' })
+        }
+        // 创建组件存储
+        if (!db.objectStoreNames.contains('widgets')) {
+          db.createObjectStore('widgets', { keyPath: 'id' })
         }
         // 创建设置存储
         if (!db.objectStoreNames.contains('settings')) {
@@ -72,6 +83,42 @@ export const db = {
     },
   },
 
+  // 组件相关操作
+  widgets: {
+    async getAll(): Promise<StoredWidgetItem[]> {
+      const db = await getDB()
+      return db.getAll('widgets')
+    },
+
+    async add(widget: StoredWidgetItem) {
+      const db = await getDB()
+      return db.put('widgets', widget)
+    },
+
+    async update(widget: StoredWidgetItem) {
+      const db = await getDB()
+      return db.put('widgets', widget)
+    },
+
+    async delete(id: string) {
+      const db = await getDB()
+      return db.delete('widgets', id)
+    },
+
+    async saveAll(widgets: StoredWidgetItem[]) {
+      const db = await getDB()
+      const tx = db.transaction('widgets', 'readwrite')
+      const store = tx.objectStore('widgets')
+
+      // 清空旧数据
+      await store.clear()
+
+      // 批量添加新数据
+      await Promise.all(widgets.map((widget) => store.add(widget)))
+      await tx.done
+    },
+  },
+
   // 设置相关操作
   settings: {
     async get(key: string) {
@@ -93,8 +140,17 @@ export const db = {
   // 重置整个数据库（清空所有数据）
   async resetAll() {
     const db = await getDB()
-    const tx = db.transaction(['sites', 'settings'], 'readwrite')
-    await Promise.all([tx.objectStore('sites').clear(), tx.objectStore('settings').clear()])
+    const objectStoreNames = Array.from(db.objectStoreNames)
+    const storesToClear = ['sites', 'widgets', 'settings'].filter((name) =>
+      objectStoreNames.includes(name)
+    )
+    
+    if (storesToClear.length === 0) {
+      return
+    }
+    
+    const tx = db.transaction(storesToClear, 'readwrite')
+    await Promise.all(storesToClear.map((name) => tx.objectStore(name).clear()))
     await tx.done
   },
 }

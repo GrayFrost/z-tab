@@ -111,6 +111,7 @@ export function paginateItems(items: GridItem[]): GridItem[][] {
 
 /**
  * 根据保存的布局顺序对 items 进行排序
+ * add-site 按钮总是排在最后一个widget后面
  */
 export function sortItemsByLayout(items: GridItem[], savedLayout: Layout[]): GridItem[] {
   if (!savedLayout || savedLayout.length === 0) return items
@@ -125,14 +126,14 @@ export function sortItemsByLayout(items: GridItem[], savedLayout: Layout[]): Gri
   const addSiteItem = items.find((item) => item.type === 'add-site')
   const otherItems = items.filter((item) => item.type !== 'add-site')
 
-  // 对 items 进行排序
+  // 对 items 进行排序（不包括 add-site）
   const sortedItems = [...otherItems].sort((a, b) => {
     const posA = positionMap.get(a.id) ?? Infinity
     const posB = positionMap.get(b.id) ?? Infinity
     return posA - posB
   })
 
-  // add-site 按钮放最后
+  // add-site 按钮总是放在最后（在所有widget之后）
   if (addSiteItem) {
     sortedItems.push(addSiteItem)
   }
@@ -166,19 +167,19 @@ export function reorderItemsByPageLayout(
     return posA - posB
   })
 
-  // 重建完整的 items 数组
+  // 重建完整的 items 数组（不包括 add-site）
   const newItems: GridItem[] = []
   pages.forEach((page, idx) => {
     if (idx === pageIndex) {
-      // 当前页使用新排序
+      // 当前页使用新排序（排除 add-site）
       newItems.push(...sortedPageItems.filter((item) => item.type !== 'add-site'))
     } else {
-      // 其他页保持原样
+      // 其他页保持原样（排除 add-site）
       newItems.push(...page.filter((item) => item.type !== 'add-site'))
     }
   })
 
-  // add-site 按钮放最后
+  // add-site 按钮总是放在最后（在所有widget之后）
   const addSiteItem = allItems.find((item) => item.type === 'add-site')
   if (addSiteItem) {
     newItems.push(addSiteItem)
@@ -194,3 +195,213 @@ export function reorderItemsByPageLayout(
   return { newItems, orderChanged }
 }
 
+/**
+ * 合并当前页的布局到全局布局中，保留实际的 x, y 坐标
+ */
+export function mergePageLayoutIntoGlobal(
+  allItems: GridItem[],
+  pages: GridItem[][],
+  pageIndex: number,
+  pageLayout: Layout[],
+  savedGlobalLayout?: Layout[]
+): Layout[] {
+  // 创建全局布局映射
+  const globalLayoutMap = new Map<string, Layout>()
+  
+  // 如果有保存的全局布局，先加载它
+  if (savedGlobalLayout) {
+    savedGlobalLayout.forEach((layout) => {
+      globalLayoutMap.set(layout.i, layout)
+    })
+  } else {
+    // 否则生成默认布局
+    const defaultLayout = generatePageLayout(allItems)
+    defaultLayout.forEach((layout) => {
+      globalLayoutMap.set(layout.i, layout)
+    })
+  }
+
+  // 计算当前页之前的所有页的 items 数量，用于计算 y 偏移
+  let yOffset = 0
+  for (let i = 0; i < pageIndex; i++) {
+    const pageItems = pages[i]
+    if (pageItems) {
+      // 计算这一页的最大 y 值
+      let maxY = 0
+      pageItems.forEach((item) => {
+        const layout = globalLayoutMap.get(item.id)
+        if (layout) {
+          maxY = Math.max(maxY, layout.y + layout.h)
+        }
+      })
+      yOffset += maxY
+    }
+  }
+
+  // 更新当前页的布局，保留实际的 x, y 坐标（不包括 add-site）
+  const addSiteLayouts: Layout[] = []
+  pageLayout.forEach((layout) => {
+    const item = allItems.find((i) => i.id === layout.i)
+    if (item && item.type !== 'add-site') {
+      const { w, h } = sizeToGrid[item.size]
+      const banResize = ['1x1', '2x1', '2x2', '4x2'].includes(item.size)
+
+      globalLayoutMap.set(layout.i, {
+        ...layout,
+        w,
+        h,
+        minW: 1,
+        minH: 1,
+        maxW: GRID_COLS,
+        maxH: PAGE_ROWS,
+        isResizable: !banResize,
+        isDraggable: true,
+        static: false,
+        y: layout.y,
+      })
+    } else if (item && item.type === 'add-site') {
+      // 保存 add-site 的布局，稍后处理
+      addSiteLayouts.push(layout)
+    }
+  })
+  
+  // 对于 add-site 按钮，总是计算它在最后一个组件之后的位置
+  const addSiteItem = allItems.find((item) => item.type === 'add-site')
+  if (addSiteItem) {
+    // 找到所有非 add-site 的布局，计算最后一个组件的位置
+    const otherLayouts = Array.from(globalLayoutMap.values()).filter((l) => {
+      const item = allItems.find((i) => i.id === l.i)
+      return item && item.type !== 'add-site'
+    })
+    
+    if (otherLayouts.length > 0) {
+      // 找到最后一个组件的位置（最大的 y * 1000 + x）
+      let maxY = -1
+      let maxX = -1
+      let lastLayout: Layout | null = null
+      otherLayouts.forEach((layout) => {
+        if (layout.y > maxY || (layout.y === maxY && layout.x > maxX)) {
+          maxY = layout.y
+          maxX = layout.x
+          lastLayout = layout
+        }
+      })
+      
+      if (lastLayout) {
+        // 计算 add-site 的位置：在最后一个组件之后
+        let addSiteX = lastLayout.x + lastLayout.w
+        let addSiteY = lastLayout.y
+        
+        // 如果右侧放不下，换到下一行
+        if (addSiteX + 1 > GRID_COLS) {
+          addSiteX = 0
+          addSiteY = lastLayout.y + lastLayout.h
+        }
+        
+        const { w, h } = sizeToGrid[addSiteItem.size]
+        globalLayoutMap.set(addSiteItem.id, {
+          i: addSiteItem.id,
+          x: addSiteX,
+          y: addSiteY,
+          w,
+          h,
+          minW: 1,
+          minH: 1,
+          maxW: GRID_COLS,
+          maxH: PAGE_ROWS,
+          isResizable: false,
+          isDraggable: false,
+          static: true,
+        })
+      }
+    }
+  }
+
+  // 返回全局布局数组
+  return Array.from(globalLayoutMap.values())
+}
+
+/**
+ * 从全局布局中提取指定页的布局
+ * add-site 按钮的位置总是根据其他组件的位置动态计算
+ */
+export function extractPageLayoutFromGlobal(
+  pageItems: GridItem[],
+  globalLayout: Layout[]
+): Layout[] {
+  // 分离 add-site 按钮和其他组件
+  const addSiteItem = pageItems.find((item) => item.type === 'add-site')
+  const otherItems = pageItems.filter((item) => item.type !== 'add-site')
+  
+  // 获取其他组件的布局（使用保存的位置）
+  const otherLayouts: Layout[] = []
+  otherItems.forEach((item) => {
+    const savedLayout = globalLayout.find((l) => l.i === item.id)
+    if (savedLayout) {
+      const { w, h } = sizeToGrid[item.size]
+      const banResize = ['1x1', '2x1', '2x2', '4x2'].includes(item.size)
+      otherLayouts.push({
+        ...savedLayout,
+        w,
+        h,
+        minW: 1,
+        minH: 1,
+        maxW: GRID_COLS,
+        maxH: PAGE_ROWS,
+        isResizable: !banResize,
+        isDraggable: true,
+        static: false,
+      })
+    }
+  })
+  
+  // 如果其他组件都有保存的布局，计算 add-site 的位置
+  if (otherLayouts.length === otherItems.length && addSiteItem) {
+    // 找到最后一个组件的位置（最大的 y，如果 y 相同则最大的 x）
+    let maxY = -1
+    let maxX = -1
+    let lastLayout: Layout | null = null
+    otherLayouts.forEach((layout) => {
+      if (layout.y > maxY || (layout.y === maxY && layout.x > maxX)) {
+        maxY = layout.y
+        maxX = layout.x
+        lastLayout = layout
+      }
+    })
+    
+    // 计算 add-site 的位置：在最后一个组件之后
+    let addSiteX = 0
+    let addSiteY = maxY
+    
+    if (lastLayout) {
+      // add-site 放在最后一个组件的右侧
+      addSiteX = lastLayout.x + lastLayout.w
+      // 如果右侧放不下，换到下一行
+      if (addSiteX + 1 > GRID_COLS) {
+        addSiteX = 0
+        addSiteY = maxY + lastLayout.h
+      }
+    }
+    
+    const { w, h } = sizeToGrid[addSiteItem.size]
+    const addSiteLayout: Layout = {
+      i: addSiteItem.id,
+      x: addSiteX,
+      y: addSiteY,
+      w,
+      h,
+      minW: 1,
+      minH: 1,
+      maxW: GRID_COLS,
+      maxH: PAGE_ROWS,
+      isResizable: false,
+      isDraggable: false,
+      static: true,
+    }
+    
+    return [...otherLayouts, addSiteLayout]
+  }
+  
+  // 如果没有找到保存的布局，生成默认布局（add-site 会自动排在最后）
+  return generatePageLayout(pageItems)
+}

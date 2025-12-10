@@ -12,6 +12,8 @@ import {
   paginateItems,
   sortItemsByLayout,
   reorderItemsByPageLayout,
+  mergePageLayoutIntoGlobal,
+  extractPageLayoutFromGlobal,
   LAYOUT_STORAGE_KEY,
   PAGE_ROWS,
 } from './utils/layout'
@@ -19,7 +21,8 @@ import { db } from '@/lib/db'
 import { WidgetCard, SiteCard, AddSiteCard } from './widgets'
 import { AddSiteDialog } from './AddSiteDialog'
 import { EditFaviconDialog } from './EditFaviconDialog'
-import { presetSites, fixedWidgets, iconMap } from './data'
+import { WidgetDrawer } from './WidgetDrawer'
+import { presetSites, fixedWidgets, iconMap, availableWidgets } from './data'
 
 // 恢复站点数据的图标组件
 function restoreIcons(sites: SiteItem[]): SiteItem[] {
@@ -31,12 +34,33 @@ function restoreIcons(sites: SiteItem[]): SiteItem[] {
   })
 }
 
-export function WidgetGrid() {
+// 恢复组件数据的图标组件（从 IndexedDB 加载的 widgets 没有 icon）
+function restoreWidgetIcons(widgets: Omit<WidgetItem, 'icon'>[]): WidgetItem[] {
+  const widgetMap = new Map(availableWidgets.map((w) => [w.id.split('-')[0], w]))
+  return widgets.map((widget) => {
+    // 从id中提取基础id（去掉时间戳）
+    const baseId = widget.id.split('-')[0]
+    const template = widgetMap.get(baseId)
+    if (template) {
+      return { ...widget, icon: template.icon } as WidgetItem
+    }
+    // 如果找不到模板，返回一个默认图标（不应该发生，但为了类型安全）
+    return { ...widget, icon: availableWidgets[0]?.icon || availableWidgets[0]?.icon } as WidgetItem
+  })
+}
+
+interface WidgetGridProps {
+  widgetDrawerOpen?: boolean
+  onWidgetDrawerOpenChange?: (open: boolean) => void
+}
+
+export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange }: WidgetGridProps = {}) {
   const [items, setItems] = useState<GridItem[]>([])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [urlInput, setUrlInput] = useState('')
   const [isInitialized, setIsInitialized] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
+  const [savedGlobalLayout, setSavedGlobalLayout] = useState<Layout[] | null>(null)
 
   // 编辑 favicon 相关状态
   const [editFaviconOpen, setEditFaviconOpen] = useState(false)
@@ -58,6 +82,7 @@ export function WidgetGrid() {
     const initData = async () => {
       try {
         let sites = await db.sites.getAll()
+        let widgets = await db.widgets.getAll()
         let shouldResetLayout = false
 
         if (sites.length === 0) {
@@ -69,13 +94,16 @@ export function WidgetGrid() {
         }
 
         const restoredSites = restoreIcons(sites)
-        let initialItems: GridItem[] = [...restoredSites, ...fixedWidgets]
+        const restoredWidgets = restoreWidgetIcons(widgets)
+        let initialItems: GridItem[] = [...restoredSites, ...restoredWidgets, ...fixedWidgets]
 
         // 尝试加载保存的布局并按布局顺序排序 items
+        let savedLayout: Layout[] | null = null
         if (!shouldResetLayout) {
-          const savedLayout = await db.settings.get(LAYOUT_STORAGE_KEY)
+          savedLayout = await db.settings.get(LAYOUT_STORAGE_KEY)
           if (savedLayout && Array.isArray(savedLayout) && savedLayout.length > 0) {
             initialItems = sortItemsByLayout(initialItems, savedLayout)
+            setSavedGlobalLayout(savedLayout)
           }
         }
 
@@ -153,6 +181,7 @@ export function WidgetGrid() {
 
     // 保存新布局
     const globalLayout = generatePageLayout(newItems)
+    setSavedGlobalLayout(globalLayout)
     db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
       console.error('Failed to save layout:', err)
     })
@@ -168,11 +197,19 @@ export function WidgetGrid() {
     const newItems = items.filter((item) => item.id !== id)
 
     const itemToDelete = items.find((item) => item.id === id)
-    if (itemToDelete && isSiteItem(itemToDelete)) {
-      try {
-        await db.sites.delete(id)
-      } catch (error) {
-        console.error('Failed to delete site:', error)
+    if (itemToDelete) {
+      if (isSiteItem(itemToDelete)) {
+        try {
+          await db.sites.delete(id)
+        } catch (error) {
+          console.error('Failed to delete site:', error)
+        }
+      } else if (itemToDelete.type === 'widget') {
+        try {
+          await db.widgets.delete(id)
+        } catch (error) {
+          console.error('Failed to delete widget:', error)
+        }
       }
     }
 
@@ -218,6 +255,48 @@ export function WidgetGrid() {
     }
   }
 
+  const handleAddWidget = async (widget: WidgetItem) => {
+    // 生成唯一的widget id（如果widget已经有唯一id则使用，否则添加时间戳）
+    const newWidget: WidgetItem = {
+      ...widget,
+      id: widget.id.includes('-') ? widget.id : `${widget.id}-${Date.now()}`,
+    }
+
+    // 在 add-site 按钮之前插入新widget
+    const addSiteIndex = items.findIndex((item) => item.type === 'add-site')
+    const newItems = [...items]
+    if (addSiteIndex !== -1) {
+      newItems.splice(addSiteIndex, 0, newWidget)
+    } else {
+      newItems.push(newWidget)
+    }
+
+    setItems(newItems)
+
+    // 保存 widget 到 IndexedDB（不保存icon，因为icon是函数无法序列化）
+    try {
+      const { icon, ...widgetToSave } = newWidget
+      await db.widgets.add(widgetToSave)
+    } catch (err) {
+      console.error('Failed to save widget to IndexedDB:', err)
+    }
+
+    // 保存新布局到 IndexedDB
+    const globalLayout = generatePageLayout(newItems)
+    setSavedGlobalLayout(globalLayout)
+    try {
+      await db.settings.set(LAYOUT_STORAGE_KEY, globalLayout)
+    } catch (err) {
+      console.error('Failed to save layout to IndexedDB:', err)
+    }
+
+    // 如果添加后创建了新页，滚动到新页
+    const newPages = paginateItems(newItems)
+    if (newPages.length > totalPages) {
+      setTimeout(() => scrollToPage(newPages.length - 1), 100)
+    }
+  }
+
   const renderItem = (item: GridItem) => {
     if (isAddSiteItem(item)) {
       return <AddSiteCard onClick={() => setDialogOpen(true)} />
@@ -249,10 +328,25 @@ export function WidgetGrid() {
       dragStartTimeRef.current = null
       
       // 拖拽停止时，确保布局被保存（防止布局丢失）
-      // 使用当前的 items 生成布局并保存
-      const globalLayout = generatePageLayout(items)
-      db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
-        console.error('Failed to save layout on drag stop:', err)
+      // 使用最新的 items 和保存的布局状态
+      setItems((currentItems) => {
+        setSavedGlobalLayout((currentLayout) => {
+          if (currentLayout) {
+            // 如果已经有保存的布局，直接保存（因为 handlePageLayoutChange 已经更新了）
+            db.settings.set(LAYOUT_STORAGE_KEY, currentLayout).catch((err) => {
+              console.error('Failed to save layout on drag stop:', err)
+            })
+          } else {
+            // 如果没有保存的布局，生成新的
+            const globalLayout = generatePageLayout(currentItems)
+            setSavedGlobalLayout(globalLayout)
+            db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
+              console.error('Failed to save layout on drag stop:', err)
+            })
+          }
+          return currentLayout
+        })
+        return currentItems
       })
     }, 100)
   }
@@ -267,10 +361,20 @@ export function WidgetGrid() {
     }
 
     // 无论顺序是否变化，都要保存布局（因为位置可能改变了）
-    // 使用最新的 items（如果顺序变化了就用 newItems，否则用当前的 items）
+    // 合并当前页的布局到全局布局中，保留实际的 x, y 坐标
     const itemsToSave = orderChanged ? newItems : items
-    const globalLayout = generatePageLayout(itemsToSave)
-    db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
+    const newPages = paginateItems(itemsToSave)
+    const mergedLayout = mergePageLayoutIntoGlobal(
+      itemsToSave,
+      newPages,
+      pageIndex,
+      newLayout,
+      savedGlobalLayout || undefined
+    )
+    
+    // 保存合并后的全局布局
+    setSavedGlobalLayout(mergedLayout)
+    db.settings.set(LAYOUT_STORAGE_KEY, mergedLayout).catch((err) => {
       console.error('Failed to save layout:', err)
     })
   }
@@ -302,7 +406,11 @@ export function WidgetGrid() {
               <div style={{ width: GRID_WIDTH }}>
                 <GridLayout
                   className="layout"
-                  layout={generatePageLayout(pageItems)}
+                  layout={
+                    savedGlobalLayout
+                      ? extractPageLayoutFromGlobal(pageItems, savedGlobalLayout)
+                      : generatePageLayout(pageItems)
+                  }
                   cols={GRID_COLS}
                   rowHeight={ROW_HEIGHT}
                   width={GRID_WIDTH}
@@ -345,6 +453,11 @@ export function WidgetGrid() {
         </div>
       )}
 
+      <WidgetDrawer
+        open={widgetDrawerOpen}
+        onOpenChange={onWidgetDrawerOpenChange || (() => {})}
+        onAddWidget={handleAddWidget}
+      />
       <AddSiteDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}

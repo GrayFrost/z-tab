@@ -4,6 +4,7 @@ import { WidgetGrid } from '@/components/WidgetGrid'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { SettingsDrawer } from '@/components/SettingsDrawer'
 import { HelpPage } from '@/components/HelpPage'
+import { AddWidgetButton } from '@/components/WidgetGrid/widgets'
 import { HelpCircle } from 'lucide-react'
 import { db } from '@/lib/db'
 
@@ -12,6 +13,7 @@ function App() {
   const [autoHideButtons, setAutoHideButtons] = useState(false)
   const [isHovering, setIsHovering] = useState(false)
   const [isSettingsLoaded, setIsSettingsLoaded] = useState(false)
+  const [widgetDrawerOpen, setWidgetDrawerOpen] = useState(false)
 
   // 从 IndexedDB 加载设置
   useEffect(() => {
@@ -60,6 +62,9 @@ function App() {
           autoHideButtons={autoHideButtons}
           onAutoHideButtonsChange={setAutoHideButtons}
         />
+
+        {/* 添加组件按钮 */}
+        <AddWidgetButton onClick={() => setWidgetDrawerOpen(true)} />
       </div>
 
       {/* 帮助按钮 - 右下角 */}
@@ -90,7 +95,10 @@ function App() {
 
       {/* WidgetGrid 分页区域 */}
       <div className="flex-1 overflow-hidden relative z-10">
-        <WidgetGrid />
+        <WidgetGrid
+          widgetDrawerOpen={widgetDrawerOpen}
+          onWidgetDrawerOpenChange={setWidgetDrawerOpen}
+        />
       </div>
     </div>
   )

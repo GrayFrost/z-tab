@@ -1,3 +1,5 @@
 export { WidgetCard } from './WidgetCard'
 export { SiteCard } from './SiteCard'
 export { AddSiteCard } from './AddSiteCard'
+export { AddWidgetButton } from './AddWidgetButton'
+export { ClockWidget } from './ClockWidget'

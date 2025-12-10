@@ -6,6 +6,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import { ClockWidget } from './ClockWidget'
 
 interface WidgetCardProps {
   widget: WidgetItem
@@ -13,6 +14,26 @@ interface WidgetCardProps {
 }
 
 export function WidgetCard({ widget, onDelete }: WidgetCardProps) {
+  // 根据widget id渲染不同的功能组件
+  if (widget.id === 'clock') {
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div className="cursor-grab">
+            <ClockWidget widgetId={widget.id} />
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+            <Trash2 className="w-4 h-4 mr-2" />
+            删除
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    )
+  }
+
+  // 默认渲染（通用widget卡片）
   const sizeLabel = widget.size.replace('x', '×')
   const Icon = widget.icon
 
