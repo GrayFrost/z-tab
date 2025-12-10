@@ -269,23 +269,20 @@ export function mergePageLayoutIntoGlobal(
   const addSiteItem = allItems.find((item) => item.type === 'add-site')
   if (addSiteItem) {
     // 找到所有非 add-site 的布局，计算最后一个组件的位置
-    const otherLayouts = Array.from(globalLayoutMap.values()).filter((l) => {
+    const otherLayouts: Layout[] = Array.from(globalLayoutMap.values()).filter((l) => {
       const item = allItems.find((i) => i.id === l.i)
       return item && item.type !== 'add-site'
-    })
+    }) as Layout[]
     
     if (otherLayouts.length > 0) {
       // 找到最后一个组件的位置（最大的 y * 1000 + x）
-      let maxY = -1
-      let maxX = -1
-      let lastLayout: Layout | null = null
-      otherLayouts.forEach((layout) => {
-        if (layout.y > maxY || (layout.y === maxY && layout.x > maxX)) {
-          maxY = layout.y
-          maxX = layout.x
-          lastLayout = layout
+      const lastLayout = otherLayouts.reduce<Layout | null>((prev, layout) => {
+        if (!prev) return layout
+        if (layout.y > prev.y || (layout.y === prev.y && layout.x > prev.x)) {
+          return layout
         }
-      })
+        return prev
+      }, null)
       
       if (lastLayout) {
         // 计算 add-site 的位置：在最后一个组件之后
@@ -358,20 +355,17 @@ export function extractPageLayoutFromGlobal(
   // 如果其他组件都有保存的布局，计算 add-site 的位置
   if (otherLayouts.length === otherItems.length && addSiteItem) {
     // 找到最后一个组件的位置（最大的 y，如果 y 相同则最大的 x）
-    let maxY = -1
-    let maxX = -1
-    let lastLayout: Layout | null = null
-    otherLayouts.forEach((layout) => {
-      if (layout.y > maxY || (layout.y === maxY && layout.x > maxX)) {
-        maxY = layout.y
-        maxX = layout.x
-        lastLayout = layout
+    const lastLayout = otherLayouts.reduce<Layout | null>((prev, layout) => {
+      if (!prev) return layout
+      if (layout.y > prev.y || (layout.y === prev.y && layout.x > prev.x)) {
+        return layout
       }
-    })
+      return prev
+    }, null)
     
     // 计算 add-site 的位置：在最后一个组件之后
     let addSiteX = 0
-    let addSiteY = maxY
+    let addSiteY = lastLayout?.y ?? 0
     
     if (lastLayout) {
       // add-site 放在最后一个组件的右侧
@@ -379,7 +373,7 @@ export function extractPageLayoutFromGlobal(
       // 如果右侧放不下，换到下一行
       if (addSiteX + 1 > GRID_COLS) {
         addSiteX = 0
-        addSiteY = maxY + lastLayout.h
+        addSiteY = lastLayout.y + lastLayout.h
       }
     }
     

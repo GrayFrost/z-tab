@@ -141,9 +141,9 @@ export const db = {
   async resetAll() {
     const db = await getDB()
     const objectStoreNames = Array.from(db.objectStoreNames)
-    const storesToClear = ['sites', 'widgets', 'settings'].filter((name) =>
+    const storesToClear = (['sites', 'widgets', 'settings'] as const).filter((name) =>
       objectStoreNames.includes(name)
-    )
+    ) as Array<'sites' | 'widgets' | 'settings'>
     
     if (storesToClear.length === 0) {
       return
