@@ -326,7 +326,7 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
     setTimeout(() => {
       isDraggingRef.current = false
       dragStartTimeRef.current = null
-      
+
       // 拖拽停止时，确保布局被保存（防止布局丢失）
       // 使用最新的 items 和保存的布局状态
       setItems((currentItems) => {
@@ -371,7 +371,7 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
       newLayout,
       savedGlobalLayout || undefined
     )
-    
+
     // 保存合并后的全局布局
     setSavedGlobalLayout(mergedLayout)
     db.settings.set(LAYOUT_STORAGE_KEY, mergedLayout).catch((err) => {
@@ -442,11 +442,10 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
             <button
               key={index}
               onClick={() => scrollToPage(index)}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                index === currentPage
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentPage
                   ? 'bg-foreground/80 w-6'
                   : 'bg-foreground/20 hover:bg-foreground/40'
-              }`}
+                }`}
               aria-label={`第 ${index + 1} 页`}
             />
           ))}
@@ -455,8 +454,9 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
 
       <WidgetDrawer
         open={widgetDrawerOpen}
-        onOpenChange={onWidgetDrawerOpenChange || (() => {})}
+        onOpenChange={onWidgetDrawerOpenChange || (() => { })}
         onAddWidget={handleAddWidget}
+        existingItems={items}
       />
       <AddSiteDialog
         open={dialogOpen}

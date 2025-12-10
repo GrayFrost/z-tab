@@ -5,9 +5,10 @@ import { cn } from '@/lib/utils'
 interface ClockWidgetProps {
   widgetId: string
   onDelete?: () => void
+  preview?: boolean // 预览模式，不显示删除按钮
 }
 
-export function ClockWidget({ widgetId, onDelete }: ClockWidgetProps) {
+export function ClockWidget({ onDelete, preview = false }: ClockWidgetProps) {
   const [time, setTime] = useState(new Date())
   const [showMenu, setShowMenu] = useState(false)
   const prevSecondsRef = useRef<number | null>(null)
@@ -38,8 +39,12 @@ export function ClockWidget({ widgetId, onDelete }: ClockWidgetProps) {
     }
   }, [showMenu])
 
-  // 右键显示/隐藏菜单
+  // 右键显示/隐藏菜单（预览模式下禁用）
   const handleContextMenu = (e: React.MouseEvent) => {
+    if (preview) {
+      e.preventDefault()
+      return
+    }
     e.preventDefault()
     e.stopPropagation()
     setShowMenu((prev) => !prev)
@@ -119,8 +124,8 @@ export function ClockWidget({ widgetId, onDelete }: ClockWidgetProps) {
       onContextMenu={handleContextMenu}
       className="relative h-full w-full rounded-2xl bg-card border border-border/50 p-2 flex items-stretch gap-2 shadow-sm hover:shadow-md hover:border-border transition-all duration-300 overflow-visible"
     >
-      {/* 删除按钮 */}
-      {showMenu && (
+      {/* 删除按钮（预览模式下不显示） */}
+      {!preview && showMenu && (
         <button
           onClick={handleDelete}
           onMouseDown={(e) => e.stopPropagation()}
