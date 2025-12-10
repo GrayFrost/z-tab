@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useIconStyle } from '@/contexts/IconStyleContext'
 
 interface ClockWidgetProps {
   widgetId: string
@@ -9,6 +10,8 @@ interface ClockWidgetProps {
 }
 
 export function ClockWidget({ onDelete, preview = false }: ClockWidgetProps) {
+  const { iconStyle } = useIconStyle()
+  const isColorful = iconStyle === 'colorful'
   const [time, setTime] = useState(new Date())
   const [showMenu, setShowMenu] = useState(false)
   const prevSecondsRef = useRef<number | null>(null)
@@ -122,7 +125,12 @@ export function ClockWidget({ onDelete, preview = false }: ClockWidgetProps) {
   return (
     <div
       onContextMenu={handleContextMenu}
-      className="relative h-full w-full rounded-2xl bg-card border border-border/50 p-2 flex items-stretch gap-2 shadow-sm hover:shadow-md hover:border-border transition-all duration-300 overflow-visible"
+      className={cn(
+        "relative h-full w-full rounded-2xl p-2 flex items-stretch gap-2 transition-all duration-300 overflow-visible",
+        isColorful
+          ? "bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 border-2 border-primary/30 shadow-lg hover:shadow-xl hover:border-primary/50"
+          : "bg-card border border-border/50 shadow-sm hover:shadow-md hover:border-border"
+      )}
     >
       {/* 删除按钮（预览模式下不显示） */}
       {!preview && showMenu && (
@@ -137,11 +145,20 @@ export function ClockWidget({ onDelete, preview = false }: ClockWidgetProps) {
       )}
 
       {/* 左侧：小时显示 */}
-      <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/30" style={{ minHeight: 0 }}>
+      <div
+        className={cn(
+          "flex-1 relative rounded-lg overflow-hidden",
+          isColorful ? "bg-gradient-to-b from-blue-500/20 to-purple-500/20" : "bg-muted/30"
+        )}
+        style={{ minHeight: 0 }}
+      >
         {/* 进度条背景（从底部向上填充） */}
         <div
           className={cn(
-            "absolute bottom-0 left-0 right-0 bg-primary/20",
+            "absolute bottom-0 left-0 right-0",
+            isColorful
+              ? "bg-gradient-to-t from-blue-500/60 via-blue-400/50 to-blue-300/40"
+              : "bg-primary/20",
             shouldAnimateHours ? "transition-all duration-1000 ease-linear" : "transition-none"
           )}
           style={{ 
@@ -151,18 +168,32 @@ export function ClockWidget({ onDelete, preview = false }: ClockWidgetProps) {
         />
         {/* 小时数字 */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-3xl font-bold text-foreground tabular-nums z-10 leading-none">
+          <span
+            className={cn(
+              "text-3xl font-bold tabular-nums z-10 leading-none",
+              isColorful ? "text-blue-600 dark:text-blue-400 drop-shadow-sm" : "text-foreground"
+            )}
+          >
             {hours.toString().padStart(2, '0')}
           </span>
         </div>
       </div>
 
       {/* 右侧：分钟显示 */}
-      <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/30" style={{ minHeight: 0 }}>
+      <div
+        className={cn(
+          "flex-1 relative rounded-lg overflow-hidden",
+          isColorful ? "bg-gradient-to-b from-purple-500/20 to-pink-500/20" : "bg-muted/30"
+        )}
+        style={{ minHeight: 0 }}
+      >
         {/* 进度条背景（从底部向上填充，表示分钟进度） */}
         <div
           className={cn(
-            "absolute bottom-0 left-0 right-0 bg-primary/20",
+            "absolute bottom-0 left-0 right-0",
+            isColorful
+              ? "bg-gradient-to-t from-purple-500/60 via-purple-400/50 to-purple-300/40"
+              : "bg-primary/20",
             shouldAnimateMinutes ? "transition-all duration-1000 ease-linear" : "transition-none"
           )}
           style={{ 
@@ -173,7 +204,10 @@ export function ClockWidget({ onDelete, preview = false }: ClockWidgetProps) {
         {/* 秒数进度条叠加（更明显的颜色） */}
         <div
           className={cn(
-            "absolute bottom-0 left-0 right-0 bg-primary/40",
+            "absolute bottom-0 left-0 right-0",
+            isColorful
+              ? "bg-gradient-to-t from-pink-500/70 via-pink-400/60 to-pink-300/50"
+              : "bg-primary/40",
             shouldAnimateSeconds ? "transition-all duration-1000 ease-linear" : "transition-none"
           )}
           style={{ 
@@ -183,7 +217,12 @@ export function ClockWidget({ onDelete, preview = false }: ClockWidgetProps) {
         />
         {/* 分钟数字 */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-3xl font-bold text-foreground tabular-nums z-10 leading-none">
+          <span
+            className={cn(
+              "text-3xl font-bold tabular-nums z-10 leading-none",
+              isColorful ? "text-purple-600 dark:text-purple-400 drop-shadow-sm" : "text-foreground"
+            )}
+          >
             {minutes.toString().padStart(2, '0')}
           </span>
         </div>
