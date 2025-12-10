@@ -18,19 +18,9 @@ export function WidgetCard({ widget, onDelete }: WidgetCardProps) {
   // widget.id 可能是 'clock' 或 'clock-${timestamp}'，所以使用 startsWith 判断
   if (widget.id.startsWith('clock')) {
     return (
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <div className="h-full w-full cursor-grab">
-            <ClockWidget widgetId={widget.id} />
-          </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-            <Trash2 className="w-4 h-4 mr-2" />
-            删除
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
+      <div className="h-full w-full cursor-grab">
+        <ClockWidget widgetId={widget.id} onDelete={onDelete} />
+      </div>
     )
   }
 

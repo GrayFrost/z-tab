@@ -1,19 +1,56 @@
 import { useState, useEffect, useRef } from 'react'
-import { Clock } from 'lucide-react'
+import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ClockWidgetProps {
   widgetId: string
+  onDelete?: () => void
 }
 
-export function ClockWidget({ widgetId }: ClockWidgetProps) {
+export function ClockWidget({ widgetId, onDelete }: ClockWidgetProps) {
   const [time, setTime] = useState(new Date())
+  const [showMenu, setShowMenu] = useState(false)
   const prevSecondsRef = useRef<number | null>(null)
   const prevMinutesRef = useRef<number | null>(null)
   const prevHoursRef = useRef<number | null>(null)
   const [shouldAnimateSeconds, setShouldAnimateSeconds] = useState(true)
   const [shouldAnimateMinutes, setShouldAnimateMinutes] = useState(true)
   const [shouldAnimateHours, setShouldAnimateHours] = useState(true)
+
+  // 点击其他地方时隐藏菜单
+  useEffect(() => {
+    if (!showMenu) return
+
+    const handleClickOutside = () => {
+      setShowMenu(false)
+    }
+
+    // 延迟添加监听，避免立即触发
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside)
+      document.addEventListener('contextmenu', handleClickOutside)
+    }, 100)
+
+    return () => {
+      clearTimeout(timer)
+      document.removeEventListener('click', handleClickOutside)
+      document.removeEventListener('contextmenu', handleClickOutside)
+    }
+  }, [showMenu])
+
+  // 右键显示/隐藏菜单
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setShowMenu((prev) => !prev)
+  }
+
+  // 点击删除按钮
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowMenu(false)
+    onDelete?.()
+  }
 
   useEffect(() => {
     // 立即设置一次时间
@@ -78,7 +115,22 @@ export function ClockWidget({ widgetId }: ClockWidgetProps) {
   
 
   return (
-    <div className="h-full w-full rounded-2xl bg-card border border-border/50 p-2 flex items-stretch gap-2 shadow-sm hover:shadow-md hover:border-border transition-all duration-300">
+    <div
+      onContextMenu={handleContextMenu}
+      className="relative h-full w-full rounded-2xl bg-card border border-border/50 p-2 flex items-stretch gap-2 shadow-sm hover:shadow-md hover:border-border transition-all duration-300 overflow-visible"
+    >
+      {/* 删除按钮 */}
+      {showMenu && (
+        <button
+          onClick={handleDelete}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="absolute -top-2 -left-2 z-10 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center shadow-sm hover:bg-destructive/90 transition-colors"
+          title="删除"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      )}
+
       {/* 左侧：小时显示 */}
       <div className="flex-1 relative rounded-lg overflow-hidden bg-muted/30" style={{ minHeight: 0 }}>
         {/* 进度条背景（从底部向上填充） */}
