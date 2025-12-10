@@ -1,4 +1,4 @@
-import { Layout } from 'lucide-react'
+import { LayoutGrid } from 'lucide-react'
 
 interface AddWidgetButtonProps {
   onClick: () => void
@@ -15,7 +15,7 @@ export function AddWidgetButton({ onClick }: AddWidgetButtonProps) {
         group"
       aria-label="添加组件"
     >
-      <Layout className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+      <LayoutGrid className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
     </button>
   )
 }
