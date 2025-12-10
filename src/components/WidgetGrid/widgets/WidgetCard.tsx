@@ -15,11 +15,12 @@ interface WidgetCardProps {
 
 export function WidgetCard({ widget, onDelete }: WidgetCardProps) {
   // 根据widget id渲染不同的功能组件
-  if (widget.id === 'clock') {
+  // widget.id 可能是 'clock' 或 'clock-${timestamp}'，所以使用 startsWith 判断
+  if (widget.id.startsWith('clock')) {
     return (
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <div className="cursor-grab">
+          <div className="h-full w-full cursor-grab">
             <ClockWidget widgetId={widget.id} />
           </div>
         </ContextMenuTrigger>
