@@ -74,6 +74,7 @@ z-tab/
 - https://www.svgrepo.com/collection/company-logo/
 - https://tablericons.com/
 - https://seeklogo.com/
+- https://www.iconfont.cn/
 
 ## TODO
 

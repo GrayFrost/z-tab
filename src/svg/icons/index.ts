@@ -44,7 +44,7 @@ export { BrandAppleFilled, BrandAppleFilledColorful } from './apple'
 export { BrandWeibo, BrandWeiboColorful } from './weibo'
 
 // Medium
-export { BrandMedium } from './medium'
+export { BrandMedium, BrandMediumColorful } from './medium'
 
 // Dribbble
 export { BrandDribbble, BrandDribbleColorful } from './dribbble'
@@ -59,7 +59,7 @@ export { BrandGitlab, BrandGitlabColorful } from './gitlab'
 export { BrandSpotify, BrandSpotifyColorful } from './spotify'
 
 // X (Twitter)
-export { BrandX } from './x'
+export { BrandX, BrandXColorful } from './x'
 
 // Gmail
 export { BrandGmail, BrandGmailColorful } from './gmail'
@@ -68,10 +68,10 @@ export { BrandGmail, BrandGmailColorful } from './gmail'
 export { BrandFacebook, BrandFacebookColorful } from './facebook'
 
 // Pinterest
-export { BrandPinterest } from './pinterest'
+export { BrandPinterest, BrandPinterestColorful } from './pinterest'
 
 // Discord
-export { BrandDiscord } from './discord'
+export { BrandDiscord, BrandDiscordColorful } from './discord'
 
 // Twitch
 export { BrandTwitch, BrandTwitchColorful } from './twitch'
