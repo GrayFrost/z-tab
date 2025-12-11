@@ -13,24 +13,101 @@ export const LAYOUT_STORAGE_KEY = 'widget-layout'
 
 /**
  * 生成单页布局（从左到右，从上到下）
+ * 正确处理跨行组件的高度计算
  */
 export function generatePageLayout(items: GridItem[]): Layout[] {
-  let x = 0
-  let y = 0
-
-  return items.map((item) => {
-    const { w, h } = sizeToGrid[item.size]
-
-    // 如果当前行放不下，换到下一行
-    if (x + w > GRID_COLS) {
-      x = 0
-      y += 1
+  const layouts: Layout[] = []
+  // 记录每一行的占用情况：rowOccupied[y] 表示第y行从x=0到x=GRID_COLS-1的占用情况
+  const rowOccupied: boolean[][] = []
+  
+  // 初始化行占用数组
+  const initRow = (y: number) => {
+    if (!rowOccupied[y]) {
+      rowOccupied[y] = new Array(GRID_COLS).fill(false)
     }
+  }
+  
+  // 检查指定位置是否可以放置组件
+  const canPlace = (x: number, y: number, w: number, h: number): boolean => {
+    // 检查是否超出边界
+    if (x + w > GRID_COLS || y + h > PAGE_ROWS) {
+      return false
+    }
+    
+    // 检查所有需要占用的单元格是否都空闲
+    for (let dy = 0; dy < h; dy++) {
+      const currentY = y + dy
+      initRow(currentY)
+      for (let dx = 0; dx < w; dx++) {
+        if (rowOccupied[currentY][x + dx]) {
+          return false
+        }
+      }
+    }
+    return true
+  }
+  
+  // 标记指定位置为已占用
+  const markOccupied = (x: number, y: number, w: number, h: number) => {
+    for (let dy = 0; dy < h; dy++) {
+      const currentY = y + dy
+      initRow(currentY)
+      for (let dx = 0; dx < w; dx++) {
+        rowOccupied[currentY][x + dx] = true
+      }
+    }
+  }
+  
+  // 找到下一个可以放置的位置
+  const findNextPosition = (w: number, h: number): { x: number; y: number } | null => {
+    // 从第一行开始查找
+    for (let y = 0; y <= PAGE_ROWS - h; y++) {
+      for (let x = 0; x <= GRID_COLS - w; x++) {
+        if (canPlace(x, y, w, h)) {
+          return { x, y }
+        }
+      }
+    }
+    // 如果找不到位置，返回null表示无法放置
+    return null
+  }
+
+  for (const item of items) {
+    const { w, h } = sizeToGrid[item.size]
 
     // 禁用缩放
     const banResize = ['1x1', '2x1', '2x2', '4x2'].includes(item.size)
     // add-site 按钮固定位置，不可拖动
     const isStatic = item.type === 'add-site'
+
+    // 找到下一个可以放置的位置
+    const position = findNextPosition(w, h)
+
+    // 如果找不到位置，返回一个特殊的布局表示无法放置
+    if (!position) {
+      // 返回一个超出范围的布局，调用方可以检测到这个情况
+      const layout: Layout = {
+        i: item.id,
+        x: -1, // 无效的x坐标
+        y: -1, // 无效的y坐标
+        w,
+        h,
+        minW: 1,
+        minH: 1,
+        maxW: GRID_COLS,
+        maxH: PAGE_ROWS,
+        isResizable: !banResize,
+        isDraggable: !isStatic,
+        static: isStatic,
+      }
+      layouts.push(layout)
+      continue
+    }
+
+    const { x, y } = position
+
+    // 标记为已占用
+    markOccupied(x, y, w, h)
 
     const layout: Layout = {
       i: item.id,
@@ -47,49 +124,73 @@ export function generatePageLayout(items: GridItem[]): Layout[] {
       static: isStatic,
     }
 
-    x += w
-    if (x >= GRID_COLS) {
-      x = 0
-      y += h
-    }
+    layouts.push(layout)
+  }
 
-    return layout
-  })
+  return layouts
 }
 
 /**
  * 将 items 分成多页
+ * 使用实际的布局算法来检查组件是否能放在当前页
+ * 确保每页最多只有4行（PAGE_ROWS）
  */
 export function paginateItems(items: GridItem[]): GridItem[][] {
   const pages: GridItem[][] = []
   let currentPage: GridItem[] = []
-  let currentCells = 0
-
+  
   // 分离出 add-site 按钮
   const addSiteItem = items.find((item) => item.type === 'add-site')
   const otherItems = items.filter((item) => item.type !== 'add-site')
 
-  for (const item of otherItems) {
-    const { w, h } = sizeToGrid[item.size]
-    const cellsNeeded = w * h
+  // 检查组件是否能放在当前页（使用实际的布局算法）
+  const canFitInPage = (pageItems: GridItem[], newItem: GridItem): boolean => {
+    // 如果当前页为空，检查新组件的高度是否超过PAGE_ROWS
+    if (pageItems.length === 0) {
+      const { h } = sizeToGrid[newItem.size]
+      return h <= PAGE_ROWS
+    }
 
-    // 如果当前页放不下这个 item，开始新的一页
-    if (currentCells + cellsNeeded > CELLS_PER_PAGE) {
+    // 尝试生成包含新组件的布局
+    const testItems = [...pageItems, newItem]
+    const testLayout = generatePageLayout(testItems)
+
+    // 检查是否有任何组件无法放置（x=-1, y=-1表示无法放置）
+    const hasInvalidPlacement = testLayout.some(layout => layout.x === -1 && layout.y === -1)
+    if (hasInvalidPlacement) {
+      return false
+    }
+
+    // 检查所有组件的最大行数是否超过PAGE_ROWS
+    // 找到最大的 y + h 值
+    let maxRow = 0
+    for (const layout of testLayout) {
+      const bottomRow = layout.y + layout.h
+      if (bottomRow > maxRow) {
+        maxRow = bottomRow
+      }
+    }
+
+    // 如果最大行数超过PAGE_ROWS，说明放不下
+    return maxRow <= PAGE_ROWS
+  }
+
+  for (const item of otherItems) {
+    // 尝试将当前组件添加到当前页
+    if (canFitInPage(currentPage, item)) {
+      currentPage.push(item)
+    } else {
+      // 如果当前页放不下，开始新的一页
       if (currentPage.length > 0) {
         pages.push(currentPage)
       }
-      currentPage = []
-      currentCells = 0
+      currentPage = [item]
     }
-
-    currentPage.push(item)
-    currentCells += cellsNeeded
   }
 
   // 处理最后一页和 add-site 按钮
   if (addSiteItem) {
-    const addSiteCells = 1 // add-site 是 1x1
-    if (currentCells + addSiteCells <= CELLS_PER_PAGE) {
+    if (canFitInPage(currentPage, addSiteItem)) {
       // add-site 可以放在当前页
       currentPage.push(addSiteItem)
     } else {

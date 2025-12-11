@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/sheet'
 import { availableWidgets } from './data'
 import { ClockWidget } from './widgets/ClockWidget'
+import { DateWidget } from './widgets/DateWidget'
 import { WidgetCard } from './widgets/WidgetCard'
 import { CELL_SIZE, GRID_MARGIN } from './constants'
 import type { WidgetItem, GridItem } from './types'
@@ -55,6 +56,26 @@ export function WidgetDrawer({ open, onOpenChange, onAddWidget, existingItems = 
           className="flex-shrink-0 scale-90"
         >
           <ClockWidget widgetId={widget.id} preview={true} />
+        </div>
+      )
+    }
+
+    if (widget.id.startsWith('date')) {
+      // 计算预览尺寸（根据 widget size）
+      const [w, h] = widget.size.split('x').map(Number)
+      const previewWidth = w * CELL_SIZE + (w - 1) * GRID_MARGIN
+      const previewHeight = h * CELL_SIZE + (h - 1) * GRID_MARGIN
+
+      return (
+        <div
+          style={{
+            width: previewWidth,
+            height: previewHeight,
+            pointerEvents: 'none',
+          }}
+          className="flex-shrink-0 scale-90"
+        >
+          <DateWidget widgetId={widget.id} preview={true} />
         </div>
       )
     }

@@ -1,4 +1,4 @@
-import { Plus, Clock } from 'lucide-react'
+import { Plus, Clock, Calendar } from 'lucide-react'
 import {
   BrandAppleFilled,
   BrandAppleFilledColorful,
@@ -314,4 +314,5 @@ export const fixedWidgets: WidgetItem[] = [
 // 可用的功能类组件列表
 export const availableWidgets: WidgetItem[] = [
   { id: 'clock', size: '2x1', title: '时钟', icon: Clock, type: 'widget' },
+  { id: 'date', size: '4x2', title: '日期', icon: Calendar, type: 'widget' },
 ]

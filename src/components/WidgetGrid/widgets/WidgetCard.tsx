@@ -7,6 +7,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import { ClockWidget } from './ClockWidget'
+import { DateWidget } from './DateWidget'
 
 interface WidgetCardProps {
   widget: WidgetItem
@@ -20,6 +21,14 @@ export function WidgetCard({ widget, onDelete }: WidgetCardProps) {
     return (
       <div className="h-full w-full cursor-grab">
         <ClockWidget widgetId={widget.id} onDelete={onDelete} />
+      </div>
+    )
+  }
+
+  if (widget.id.startsWith('date')) {
+    return (
+      <div className="h-full w-full cursor-grab">
+        <DateWidget widgetId={widget.id} onDelete={onDelete} />
       </div>
     )
   }
