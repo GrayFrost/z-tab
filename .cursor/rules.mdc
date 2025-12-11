@@ -17,6 +17,7 @@ alwaysApply: true
 - 每次数据更新必须同步 IndexedDB
 - 布局变化必须立即保存
 - Widget 必须支持整个区域拖拽和点击
+- WidgetGrid 布局限制：每页最多 8×4（8列×4行），添加组件导致超出限制时自动分到新页面
 
 ### 核心规范
 - 使用 TypeScript 严格模式

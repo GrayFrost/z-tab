@@ -100,6 +100,12 @@
 - 尺寸映射在 `src/components/WidgetGrid/constants.ts` 中定义
 - 使用 `sizeToGrid` 映射表将尺寸转换为网格单位
 
+### Widget 布局限制
+- WidgetGrid 采用分页布局，每页固定 8×4 网格（8列×4行）
+- 添加组件时，如果会导致当前页面超出 4 行限制，必须自动分到新页面
+- 布局算法通过 `canFitInPage` 和 `paginateItems` 函数确保分页正确
+- 组件位置通过 `mergePageLayoutIntoGlobal` 函数保持布局连续性
+
 ### 添加新 Widget 流程
 1. 在 `src/components/WidgetGrid/widgets/` 下创建组件文件
 2. 定义组件的 Props 接口

@@ -180,14 +180,21 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
     setDialogOpen(false)
 
     // 保存新布局
-    const globalLayout = generatePageLayout(newItems)
+    // 使用 mergePageLayoutIntoGlobal 来保持现有布局，并为新站点分配合适的位置
+    const newPages = paginateItems(newItems)
+    const globalLayout = mergePageLayoutIntoGlobal(
+      newItems,
+      newPages,
+      newPages.length - 1, // 新站点通常在最后一页
+      [], // 空布局，让算法自动分配位置
+      savedGlobalLayout || undefined
+    )
     setSavedGlobalLayout(globalLayout)
     db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
       console.error('Failed to save layout:', err)
     })
 
     // 如果添加后创建了新页，滚动到新页
-    const newPages = paginateItems(newItems)
     if (newPages.length > totalPages) {
       setTimeout(() => scrollToPage(newPages.length - 1), 100)
     }
@@ -216,13 +223,21 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
     setItems(newItems)
 
     // 保存新布局
-    const globalLayout = generatePageLayout(newItems)
+    // 使用 mergePageLayoutIntoGlobal 来保持现有布局结构
+    const newPages = paginateItems(newItems)
+    const globalLayout = mergePageLayoutIntoGlobal(
+      newItems,
+      newPages,
+      0, // 从第一页开始
+      [], // 空布局，让算法重新分配位置
+      savedGlobalLayout?.filter(layout => layout.i !== id) || undefined // 移除被删除组件的布局
+    )
+    setSavedGlobalLayout(globalLayout)
     db.settings.set(LAYOUT_STORAGE_KEY, globalLayout).catch((err) => {
       console.error('Failed to save layout:', err)
     })
 
     // 如果删除后页数减少，调整当前页
-    const newPages = paginateItems(newItems)
     if (currentPage >= newPages.length) {
       setCurrentPage(Math.max(0, newPages.length - 1))
     }
@@ -282,7 +297,15 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
     }
 
     // 保存新布局到 IndexedDB
-    const globalLayout = generatePageLayout(newItems)
+    // 使用 mergePageLayoutIntoGlobal 来保持现有布局，并为新组件分配合适的位置
+    const newPages = paginateItems(newItems)
+    const globalLayout = mergePageLayoutIntoGlobal(
+      newItems,
+      newPages,
+      newPages.length - 1, // 新组件通常在最后一页
+      [], // 空布局，让算法自动分配位置
+      savedGlobalLayout || undefined
+    )
     setSavedGlobalLayout(globalLayout)
     try {
       await db.settings.set(LAYOUT_STORAGE_KEY, globalLayout)
@@ -291,7 +314,6 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
     }
 
     // 如果添加后创建了新页，滚动到新页
-    const newPages = paginateItems(newItems)
     if (newPages.length > totalPages) {
       setTimeout(() => scrollToPage(newPages.length - 1), 100)
     }
