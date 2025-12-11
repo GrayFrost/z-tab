@@ -80,7 +80,6 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
 
   // 获取农历信息
   const lunar = Lunar.fromDate(date)
-  const lunarYear = lunar.getYearInChinese()
   const lunarMonth = lunar.getMonthInChinese()
   const lunarDay = lunar.getDayInChinese()
   const ganZhi = lunar.getYearInGanZhi()
@@ -88,11 +87,15 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
   const festival = lunar.getFestivals().join(' ') || lunar.getOtherFestivals().join(' ')
   const jieQi = lunar.getJieQi()
 
+  // 获取今日宜忌事项
+  const yi = lunar.getDayYi() || []
+  const ji = lunar.getDayJi() || []
+
   return (
     <div
       onContextMenu={handleContextMenu}
       className={cn(
-        'relative h-full w-full rounded-2xl p-4 flex flex-col transition-all duration-300 overflow-hidden',
+        'relative h-full w-full rounded-2xl p-4 flex flex-col transition-all duration-300 overflow-visible',
         isColorful
           ? 'bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 border-2 border-primary/30 shadow-lg hover:shadow-xl hover:border-primary/50'
           : 'bg-card border border-border/50 shadow-sm hover:shadow-md hover:border-border'
@@ -103,7 +106,7 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
         <button
           onClick={handleDelete}
           onMouseDown={(e) => e.stopPropagation()}
-          className="absolute -top-2 -right-2 z-10 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center shadow-sm hover:bg-destructive/90 transition-colors"
+          className="absolute -top-2 -left-2 z-50 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center shadow-sm hover:bg-destructive/90 transition-colors"
           title="删除"
         >
           <X className="w-3.5 h-3.5" />
@@ -111,21 +114,21 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
       )}
 
       {/* 顶部：公历日期 */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
           <Calendar
             className={cn(
-              'w-5 h-5',
+              'w-4 h-4',
               isColorful ? 'text-blue-600 dark:text-blue-400' : 'text-foreground/60'
             )}
           />
           <span
             className={cn(
-              'text-sm font-medium',
-              isColorful ? 'text-blue-600 dark:text-blue-400' : 'text-foreground/80'
+              'text-lg font-bold',
+              isColorful ? 'text-blue-700 dark:text-blue-300' : 'text-foreground'
             )}
           >
-            公历
+            {year}/{month.toString().padStart(2, '0')}/{day.toString().padStart(2, '0')}
           </span>
         </div>
         <span
@@ -138,40 +141,22 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
         </span>
       </div>
 
-      {/* 公历日期显示 */}
-      <div className="mb-4">
-        <div
-          className={cn(
-            'text-4xl font-bold mb-1',
-            isColorful ? 'text-blue-700 dark:text-blue-300' : 'text-foreground'
-          )}
-        >
-          {year}年{month}月{day}日
-        </div>
-        <div
-          className={cn(
-            'text-2xl font-semibold',
-            isColorful ? 'text-blue-600 dark:text-blue-400' : 'text-foreground/90'
-          )}
-        >
-          {month.toString().padStart(2, '0')}-{day.toString().padStart(2, '0')}
-        </div>
-      </div>
-
       {/* 分隔线 */}
       <div
         className={cn(
-          'h-px mb-4',
+          'h-px mb-3',
           isColorful ? 'bg-gradient-to-r from-transparent via-primary/30 to-transparent' : 'bg-border'
         )}
       />
 
-      {/* 底部：农历信息 */}
-      <div className="flex-1 flex flex-col justify-between">
-        <div>
+      {/* 主要内容区域：左右分栏 */}
+      <div className="flex-1 grid grid-cols-2 gap-3 min-h-0">
+        {/* 左侧：日期信息 */}
+        <div className="flex flex-col min-h-0">
+          {/* 农历 */}
           <div
             className={cn(
-              'text-xs mb-2',
+              'text-xs mb-1',
               isColorful ? 'text-purple-600 dark:text-purple-400' : 'text-muted-foreground'
             )}
           >
@@ -179,20 +164,17 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
           </div>
           <div
             className={cn(
-              'text-2xl font-bold mb-1',
+              'text-lg font-bold mb-2',
               isColorful ? 'text-purple-700 dark:text-purple-300' : 'text-foreground'
             )}
           >
-            {lunarMonth}
-            {lunarDay}
+            {lunarMonth}{lunarDay}
           </div>
-        </div>
 
-        <div className="space-y-1">
           {/* 天干地支和生肖 */}
           <div
             className={cn(
-              'text-sm font-medium',
+              'text-xs font-medium mb-1',
               isColorful ? 'text-purple-600 dark:text-purple-400' : 'text-foreground/80'
             )}
           >
@@ -212,6 +194,68 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
             </div>
           )}
         </div>
+
+        {/* 右侧：今日宜忌 */}
+        {(yi.length > 0 || ji.length > 0) && (
+          <div className="flex flex-col min-h-0">
+            <div
+              className={cn(
+                'text-xs mb-2 font-medium',
+                isColorful ? 'text-foreground/80' : 'text-muted-foreground'
+              )}
+            >
+              今日
+            </div>
+
+            {/* 宜 */}
+            {yi.length > 0 && (
+              <div className="mb-2">
+                <div
+                  className={cn(
+                    'text-[10px] font-bold mb-1',
+                    isColorful
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-green-600 dark:text-green-500'
+                  )}
+                >
+                  宜
+                </div>
+                <div
+                  className={cn(
+                    'text-xs leading-tight',
+                    isColorful ? 'text-green-700 dark:text-green-300' : 'text-foreground/80'
+                  )}
+                  title={yi.join(' ')}
+                >
+                  {yi.slice(0, 3).join(' · ')}
+                </div>
+              </div>
+            )}
+
+            {/* 忌 */}
+            {ji.length > 0 && (
+              <div>
+                <div
+                  className={cn(
+                    'text-[10px] font-bold mb-1',
+                    isColorful ? 'text-red-600 dark:text-red-400' : 'text-red-600 dark:text-red-500'
+                  )}
+                >
+                  忌
+                </div>
+                <div
+                  className={cn(
+                    'text-xs leading-tight',
+                    isColorful ? 'text-red-700 dark:text-red-300' : 'text-foreground/80'
+                  )}
+                  title={ji.join(' ')}
+                >
+                  {ji.slice(0, 3).join(' · ')}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
