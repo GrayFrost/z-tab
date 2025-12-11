@@ -211,27 +211,61 @@ export function paginateItems(items: GridItem[]): GridItem[][] {
 }
 
 /**
- * 根据保存的布局顺序对 items 进行排序
+ * 根据保存的布局顺序对 items 进行排序，并按照布局中的页面分组
  * add-site 按钮总是排在最后一个widget后面
  */
 export function sortItemsByLayout(items: GridItem[], savedLayout: Layout[]): GridItem[] {
   if (!savedLayout || savedLayout.length === 0) return items
 
-  // 创建一个 id -> 位置 的映射，按照 y * 1000 + x 计算位置值
-  const positionMap = new Map<string, number>()
+  // 创建一个 id -> 布局 的映射
+  const layoutMap = new Map<string, Layout>()
   savedLayout.forEach((l) => {
-    positionMap.set(l.i, l.y * 1000 + l.x)
+    layoutMap.set(l.i, l)
   })
 
   // 分离 add-site 按钮
   const addSiteItem = items.find((item) => item.type === 'add-site')
   const otherItems = items.filter((item) => item.type !== 'add-site')
 
-  // 对 items 进行排序（不包括 add-site）
-  const sortedItems = [...otherItems].sort((a, b) => {
-    const posA = positionMap.get(a.id) ?? Infinity
-    const posB = positionMap.get(b.id) ?? Infinity
-    return posA - posB
+  // 根据全局 y 坐标确定每个组件应该在哪一页
+  // 每页最多4行，所以 y < 4 在第0页，y < 8 在第1页，以此类推
+  const itemsByPage = new Map<number, GridItem[]>()
+  
+  otherItems.forEach((item) => {
+    const layout = layoutMap.get(item.id)
+    if (layout) {
+      // 根据全局 y 坐标计算应该在哪一页
+      const pageIndex = Math.floor(layout.y / PAGE_ROWS)
+      if (!itemsByPage.has(pageIndex)) {
+        itemsByPage.set(pageIndex, [])
+      }
+      itemsByPage.get(pageIndex)!.push(item)
+    } else {
+      // 如果没有保存的布局，放到第0页
+      if (!itemsByPage.has(0)) {
+        itemsByPage.set(0, [])
+      }
+      itemsByPage.get(0)!.push(item)
+    }
+  })
+
+  // 对每页内的 items 进行排序（按 y * 1000 + x）
+  itemsByPage.forEach((pageItems) => {
+    pageItems.sort((a, b) => {
+      const layoutA = layoutMap.get(a.id)
+      const layoutB = layoutMap.get(b.id)
+      if (!layoutA || !layoutB) return 0
+      const posA = layoutA.y * 1000 + layoutA.x
+      const posB = layoutB.y * 1000 + layoutB.x
+      return posA - posB
+    })
+  })
+
+  // 按照页面顺序合并 items
+  const sortedItems: GridItem[] = []
+  const sortedPageIndices = Array.from(itemsByPage.keys()).sort((a, b) => a - b)
+  sortedPageIndices.forEach((pageIndex) => {
+    sortedItems.push(...itemsByPage.get(pageIndex)!)
   })
 
   // add-site 按钮总是放在最后（在所有widget之后）
@@ -322,24 +356,35 @@ export function mergePageLayoutIntoGlobal(
     })
   }
 
-  // 计算当前页之前的所有页的 items 数量，用于计算 y 偏移
+  // 计算当前页之前的所有页的最大全局 y 值（yOffset）
+  // 对于第0页：yOffset = 0
+  // 对于第1页：yOffset = 第0页的最大全局y值
+  // 对于第2页：yOffset = 第1页的最大全局y值
   let yOffset = 0
-  for (let i = 0; i < pageIndex; i++) {
-    const pageItems = pages[i]
-    if (pageItems) {
-      // 计算这一页的最大 y 值
+  if (pageIndex > 0) {
+    // 找到前一页的最大全局 y 值
+    const prevPageItems = pages[pageIndex - 1]
+    if (prevPageItems) {
       let maxY = 0
-      pageItems.forEach((item) => {
-        const layout = globalLayoutMap.get(item.id)
-        if (layout) {
-          maxY = Math.max(maxY, layout.y + layout.h)
+      prevPageItems.forEach((item) => {
+        if (item.type !== 'add-site') {
+          // 优先从 globalLayoutMap 中获取（可能已经更新）
+          // 如果没有，从 savedGlobalLayout 中获取
+          let layout = globalLayoutMap.get(item.id)
+          if (!layout && savedGlobalLayout) {
+            layout = savedGlobalLayout.find((l) => l.i === item.id)
+          }
+          if (layout) {
+            // layout.y 已经是全局坐标，直接取最大值
+            maxY = Math.max(maxY, layout.y + layout.h)
+          }
         }
       })
-      yOffset += maxY
+      yOffset = maxY
     }
   }
 
-  // 更新当前页的布局，保留实际的 x, y 坐标（不包括 add-site）
+  // 更新当前页的布局，将页面内的相对 y 坐标转换为全局坐标（不包括 add-site）
   const addSiteLayouts: Layout[] = []
   pageLayout.forEach((layout) => {
     const item = allItems.find((i) => i.id === layout.i)
@@ -347,8 +392,14 @@ export function mergePageLayoutIntoGlobal(
       const { w, h } = sizeToGrid[item.size]
       const banResize = ['1x1', '2x1', '2x2', '4x2'].includes(item.size)
 
+      // 将页面内的相对 y 坐标转换为全局坐标
+      // pageLayout 中的 y 是页面内的相对坐标（0-3），需要加上 yOffset
+      const globalY = layout.y + yOffset
+
       globalLayoutMap.set(layout.i, {
         ...layout,
+        x: layout.x,
+        y: globalY,
         w,
         h,
         minW: 1,
@@ -358,7 +409,6 @@ export function mergePageLayoutIntoGlobal(
         isResizable: !banResize,
         isDraggable: true,
         static: false,
-        y: layout.y,
       })
     } else if (item && item.type === 'add-site') {
       // 保存 add-site 的布局，稍后处理
@@ -387,20 +437,30 @@ export function mergePageLayoutIntoGlobal(
       
       if (lastLayout) {
         // 计算 add-site 的位置：在最后一个组件之后
+        // 注意：lastLayout 的 y 已经是全局坐标，需要转换为当前页的相对坐标来计算
+        const relativeY = lastLayout.y - yOffset
         let addSiteX = lastLayout.x + lastLayout.w
-        let addSiteY = lastLayout.y
+        let addSiteY = relativeY
         
         // 如果右侧放不下，换到下一行
         if (addSiteX + 1 > GRID_COLS) {
           addSiteX = 0
-          addSiteY = lastLayout.y + lastLayout.h
+          addSiteY = relativeY + lastLayout.h
         }
+        
+        // 确保 add-site 在当前页范围内
+        if (addSiteY >= PAGE_ROWS) {
+          addSiteY = Math.max(0, PAGE_ROWS - 1)
+        }
+        
+        // 将相对坐标转换为全局坐标保存
+        const globalAddSiteY = addSiteY + yOffset
         
         const { w, h } = sizeToGrid[addSiteItem.size]
         globalLayoutMap.set(addSiteItem.id, {
           i: addSiteItem.id,
           x: addSiteX,
-          y: addSiteY,
+          y: globalAddSiteY,
           w,
           h,
           minW: 1,
@@ -422,38 +482,75 @@ export function mergePageLayoutIntoGlobal(
 /**
  * 从全局布局中提取指定页的布局
  * add-site 按钮的位置总是根据其他组件的位置动态计算
+ * 需要将全局 y 坐标转换为页面内的相对坐标
  */
 export function extractPageLayoutFromGlobal(
   pageItems: GridItem[],
-  globalLayout: Layout[]
+  globalLayout: Layout[],
+  _allItems: GridItem[],
+  pages: GridItem[][],
+  pageIndex: number
 ): Layout[] {
   // 分离 add-site 按钮和其他组件
   const addSiteItem = pageItems.find((item) => item.type === 'add-site')
   const otherItems = pageItems.filter((item) => item.type !== 'add-site')
   
-  // 获取其他组件的布局（使用保存的位置）
+  // 计算当前页之前所有页的最大全局 y 值（yOffset）
+  // 对于第0页：yOffset = 0
+  // 对于第1页：yOffset = 第0页的最大全局y值
+  // 对于第2页：yOffset = 第1页的最大全局y值（因为第1页的y已经是全局坐标）
+  let yOffset = 0
+  if (pageIndex > 0) {
+    // 找到前一页的最大全局 y 值
+    const prevPageItems = pages[pageIndex - 1]
+    if (prevPageItems) {
+      let maxY = 0
+      prevPageItems.forEach((item) => {
+        if (item.type !== 'add-site') {
+          const savedLayout = globalLayout.find((l) => l.i === item.id)
+          if (savedLayout) {
+            // savedLayout.y 已经是全局坐标，直接取最大值
+            maxY = Math.max(maxY, savedLayout.y + savedLayout.h)
+          }
+        }
+      })
+      yOffset = maxY
+    }
+  }
+  
+  // 获取其他组件的布局（使用保存的位置，并转换为页面内相对坐标）
   const otherLayouts: Layout[] = []
   otherItems.forEach((item) => {
     const savedLayout = globalLayout.find((l) => l.i === item.id)
     if (savedLayout) {
       const { w, h } = sizeToGrid[item.size]
       const banResize = ['1x1', '2x1', '2x2', '4x2'].includes(item.size)
-      otherLayouts.push({
-        ...savedLayout,
-        w,
-        h,
-        minW: 1,
-        minH: 1,
-        maxW: GRID_COLS,
-        maxH: PAGE_ROWS,
-        isResizable: !banResize,
-        isDraggable: true,
-        static: false,
-      })
+      
+      // 将全局 y 坐标转换为页面内相对坐标
+      const relativeY = Math.max(0, savedLayout.y - yOffset)
+      
+      // 验证坐标是否在页面范围内
+      if (relativeY + h <= PAGE_ROWS && savedLayout.x + w <= GRID_COLS) {
+        otherLayouts.push({
+          ...savedLayout,
+          x: savedLayout.x,
+          y: relativeY,
+          w,
+          h,
+          minW: 1,
+          minH: 1,
+          maxW: GRID_COLS,
+          maxH: PAGE_ROWS,
+          isResizable: !banResize,
+          isDraggable: true,
+          static: false,
+        })
+      }
     }
   })
   
-  // 如果其他组件都有保存的布局，计算 add-site 的位置
+  // 如果其他组件都有保存的布局且坐标有效，计算 add-site 的位置
+  // 如果有些组件没有保存的布局或坐标无效，则重新生成布局
   if (otherLayouts.length === otherItems.length && addSiteItem) {
     // 找到最后一个组件的位置（最大的 y，如果 y 相同则最大的 x）
     const lastLayout = otherLayouts.reduce<Layout | null>((prev, layout) => {
@@ -475,6 +572,11 @@ export function extractPageLayoutFromGlobal(
       if (addSiteX + 1 > GRID_COLS) {
         addSiteX = 0
         addSiteY = lastLayout.y + lastLayout.h
+      }
+      
+      // 确保 add-site 不会超出页面范围
+      if (addSiteY >= PAGE_ROWS) {
+        addSiteY = Math.max(0, PAGE_ROWS - 1)
       }
     }
     

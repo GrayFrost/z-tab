@@ -430,7 +430,7 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
                   className="layout"
                   layout={
                     savedGlobalLayout
-                      ? extractPageLayoutFromGlobal(pageItems, savedGlobalLayout)
+                      ? extractPageLayoutFromGlobal(pageItems, savedGlobalLayout, items, pages, pageIndex)
                       : generatePageLayout(pageItems)
                   }
                   cols={GRID_COLS}
