@@ -42,6 +42,8 @@ import {
   BrandXColorful,
   BrandYoutubeFilled,
   BrandYoutubeFilledColorful,
+  BrandGodot,
+  BrandGodotColorful,
 } from '@/svg/icons'
 import type { SiteItem, WidgetItem } from './types'
 import type { ComponentType, SVGProps } from 'react'
@@ -70,6 +72,7 @@ export const minimalIconMap: Record<string, ComponentType<SVGProps<SVGSVGElement
   weibo: BrandWeibo,
   x: BrandX,
   youtube: BrandYoutubeFilled,
+  godot: BrandGodot,
 }
 
 // 绚丽风格图标映射表（素材待定，先留空，会自动回退到简约风格）
@@ -96,6 +99,7 @@ export const colorfulIconMap: Record<string, ComponentType<SVGProps<SVGSVGElemen
   weibo: BrandWeiboColorful,
   x: BrandXColorful,
   youtube: BrandYoutubeFilledColorful,
+  godot: BrandGodotColorful,
 }
 
 // 根据风格获取图标
@@ -302,6 +306,15 @@ export const presetSites: SiteItem[] = [
     url: 'https://www.twitch.com',
     favicon: '',
     icon: BrandTwitch,
+    type: 'site',
+  },
+  {
+    id: 'godot',
+    size: '1x1',
+    title: 'Godot',
+    url: 'https://godotengine.org/zh-cn/',
+    favicon: '',
+    icon: BrandGodot,
     type: 'site',
   },
 ]

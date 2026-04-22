@@ -75,6 +75,7 @@ z-tab/
 - https://tablericons.com/
 - https://seeklogo.com/
 - https://www.iconfont.cn/
+- https://techicons.dev/
 
 ## TODO
 
@@ -82,7 +83,7 @@ z-tab/
 - [ ] '2x2' | '4x2' 尺寸组件实现
 - [ ] 不同的物料组件
 - [ ] 配置的导出与导入
-- [ ] 本地图标全彩色化支持
+- [x] 本地图标全彩色化支持
 
 ## License
 

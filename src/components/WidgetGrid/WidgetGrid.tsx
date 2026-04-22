@@ -24,6 +24,81 @@ import { EditFaviconDialog } from './EditFaviconDialog'
 import { WidgetDrawer } from './WidgetDrawer'
 import { presetSites, fixedWidgets, iconMap, availableWidgets } from './data'
 
+const PRESET_SITE_IDS_STORAGE_KEY = 'preset-site-ids'
+
+function stripSiteIcon(site: SiteItem): SiteItem {
+  const { icon, ...rest } = site
+  return rest
+}
+
+function areStringArraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const aSet = new Set(a)
+  return b.every((value) => aSet.has(value))
+}
+
+function mergePresetSites(
+  storedSites: SiteItem[],
+  knownPresetIds: string[] | null
+): { sites: SiteItem[]; changed: boolean } {
+  const currentPresetIds = presetSites.map((site) => site.id)
+  const currentPresetIdSet = new Set(currentPresetIds)
+  const knownPresetIdSet = new Set(knownPresetIds ?? currentPresetIds)
+  const storedSiteMap = new Map(storedSites.map((site) => [site.id, site]))
+  const presetSiteMap = new Map(presetSites.map((site) => [site.id, stripSiteIcon(site)]))
+  const mergedSites: SiteItem[] = []
+
+  for (const site of storedSites) {
+    const wasPreset = knownPresetIdSet.has(site.id)
+    const isCurrentPreset = currentPresetIdSet.has(site.id)
+
+    if (wasPreset && !isCurrentPreset) {
+      continue
+    }
+
+    if (isCurrentPreset) {
+      const presetSite = presetSiteMap.get(site.id)
+      if (presetSite) {
+        mergedSites.push({
+          ...presetSite,
+          customFavicon: site.customFavicon,
+        })
+      }
+      continue
+    }
+
+    mergedSites.push(site)
+  }
+
+  for (const presetId of currentPresetIds) {
+    if (!storedSiteMap.has(presetId) && !knownPresetIdSet.has(presetId)) {
+      const presetSite = presetSiteMap.get(presetId)
+      if (presetSite) {
+        mergedSites.push(presetSite)
+      }
+    }
+  }
+
+  const changed =
+    !areStringArraysEqual(knownPresetIds ?? [], currentPresetIds) ||
+    mergedSites.length !== storedSites.length ||
+    mergedSites.some((site, index) => {
+      const storedSite = storedSites[index]
+      if (!storedSite) return true
+      return (
+        site.id !== storedSite.id ||
+        site.title !== storedSite.title ||
+        site.url !== storedSite.url ||
+        site.favicon !== storedSite.favicon ||
+        site.customFavicon !== storedSite.customFavicon ||
+        site.size !== storedSite.size ||
+        site.type !== storedSite.type
+      )
+    })
+
+  return { sites: mergedSites, changed }
+}
+
 // 恢复站点数据的图标组件
 function restoreIcons(sites: SiteItem[]): SiteItem[] {
   return sites.map((site) => {
@@ -84,13 +159,31 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
         let sites = await db.sites.getAll()
         let widgets = await db.widgets.getAll()
         let shouldResetLayout = false
+        const currentPresetIds = presetSites.map((site) => site.id)
 
         if (sites.length === 0) {
           console.log('Initializing with preset sites...')
-          sites = [...presetSites]
-          const sitesToSave = sites.map(({ icon, ...rest }) => rest) as SiteItem[]
-          await db.sites.saveAll(sitesToSave)
+          sites = presetSites.map(stripSiteIcon)
+          await db.sites.saveAll(sites)
+          await db.settings.set(PRESET_SITE_IDS_STORAGE_KEY, currentPresetIds)
           shouldResetLayout = true
+        } else {
+          const storedPresetIds = await db.settings.get(PRESET_SITE_IDS_STORAGE_KEY)
+          const knownPresetIds = Array.isArray(storedPresetIds)
+            ? storedPresetIds.filter((id): id is string => typeof id === 'string')
+            : null
+          const mergedPresetSites = mergePresetSites(sites, knownPresetIds)
+
+          if (mergedPresetSites.changed) {
+            sites = mergedPresetSites.sites
+            await db.sites.saveAll(sites)
+          } else {
+            sites = mergedPresetSites.sites
+          }
+
+          if (!areStringArraysEqual(knownPresetIds ?? [], currentPresetIds)) {
+            await db.settings.set(PRESET_SITE_IDS_STORAGE_KEY, currentPresetIds)
+          }
         }
 
         const restoredSites = restoreIcons(sites)
@@ -102,6 +195,12 @@ export function WidgetGrid({ widgetDrawerOpen = false, onWidgetDrawerOpenChange 
         if (!shouldResetLayout) {
           savedLayout = await db.settings.get(LAYOUT_STORAGE_KEY)
           if (savedLayout && Array.isArray(savedLayout) && savedLayout.length > 0) {
+            const initialItemIds = new Set(initialItems.map((item) => item.id))
+            const filteredLayout = savedLayout.filter((layout) => initialItemIds.has(layout.i))
+            if (filteredLayout.length !== savedLayout.length) {
+              await db.settings.set(LAYOUT_STORAGE_KEY, filteredLayout)
+            }
+            savedLayout = filteredLayout
             initialItems = sortItemsByLayout(initialItems, savedLayout)
             setSavedGlobalLayout(savedLayout)
           }

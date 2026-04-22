@@ -76,3 +76,6 @@ export { BrandDiscord, BrandDiscordColorful } from './discord'
 // Twitch
 export { BrandTwitch, BrandTwitchColorful } from './twitch'
 
+// Godot
+export { BrandGodot, BrandGodotColorful } from './godot'
+
