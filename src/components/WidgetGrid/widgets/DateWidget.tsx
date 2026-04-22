@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { X, Calendar } from 'lucide-react'
+﻿import { useState, useEffect } from 'react'
+import type { MouseEvent } from 'react'
+import { X, Calendar, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useIconStyle } from '@/contexts/IconStyleContext'
 import { Lunar } from 'lunar-javascript'
@@ -7,7 +8,7 @@ import { Lunar } from 'lunar-javascript'
 interface DateWidgetProps {
   widgetId: string
   onDelete?: () => void
-  preview?: boolean // 预览模式，不显示删除按钮
+  preview?: boolean
 }
 
 export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
@@ -16,7 +17,6 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
   const [date, setDate] = useState(new Date())
   const [showMenu, setShowMenu] = useState(false)
 
-  // 点击其他地方时隐藏菜单
   useEffect(() => {
     if (!showMenu) return
 
@@ -24,7 +24,6 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
       setShowMenu(false)
     }
 
-    // 延迟添加监听，避免立即触发
     const timer = setTimeout(() => {
       document.addEventListener('click', handleClickOutside)
       document.addEventListener('contextmenu', handleClickOutside)
@@ -37,40 +36,34 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
     }
   }, [showMenu])
 
-  // 右键显示/隐藏菜单（预览模式下禁用）
-  const handleContextMenu = (e: React.MouseEvent) => {
+  const handleContextMenu = (e: MouseEvent) => {
+    e.preventDefault()
+
     if (preview) {
-      e.preventDefault()
       return
     }
-    e.preventDefault()
+
     e.stopPropagation()
     setShowMenu((prev) => !prev)
   }
 
-  // 点击删除按钮
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e: MouseEvent) => {
     e.stopPropagation()
     setShowMenu(false)
     onDelete?.()
   }
 
-  // 更新日期（每分钟更新一次）
   useEffect(() => {
     const updateDate = () => {
       setDate(new Date())
     }
 
-    // 立即更新一次
     updateDate()
-
-    // 每分钟更新一次
     const timer = setInterval(updateDate, 60000)
 
     return () => clearInterval(timer)
   }, [])
 
-  // 格式化公历日期
   const year = date.getFullYear()
   const month = date.getMonth() + 1
   const day = date.getDate()
@@ -78,7 +71,6 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
   const weekNames = ['日', '一', '二', '三', '四', '五', '六']
   const weekDayName = `星期${weekNames[weekDay]}`
 
-  // 获取农历信息
   const lunar = Lunar.fromDate(date)
   const lunarMonth = lunar.getMonthInChinese()
   const lunarDay = lunar.getDayInChinese()
@@ -86,178 +78,146 @@ export function DateWidget({ onDelete, preview = false }: DateWidgetProps) {
   const zodiac = lunar.getYearShengXiao()
   const festival = lunar.getFestivals().join(' ') || lunar.getOtherFestivals().join(' ')
   const jieQi = lunar.getJieQi()
-
-  // 获取今日宜忌事项
   const yi = lunar.getDayYi() || []
   const ji = lunar.getDayJi() || []
+
+  const lunarDateLabel = `${lunarMonth}${lunarDay}`
+  const holidayLabel = festival || jieQi
+  const yiText = yi.slice(0, 4).join(' / ')
+  const jiText = ji.slice(0, 4).join(' / ')
 
   return (
     <div
       onContextMenu={handleContextMenu}
       className={cn(
-        'relative h-full w-full rounded-2xl p-4 flex flex-col transition-all duration-300 overflow-visible',
+        'relative h-full w-full select-none overflow-visible rounded-xl p-4 transition-all duration-300',
         isColorful
-          ? 'bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 border-2 border-primary/30 shadow-lg hover:shadow-xl hover:border-primary/50'
-          : 'bg-card border border-border/50 shadow-sm hover:shadow-md hover:border-border'
+          ? 'border border-amber-400/30 bg-[linear-gradient(135deg,hsl(var(--card))_0%,rgba(251,191,36,0.12)_48%,rgba(14,165,233,0.10)_100%)] shadow-sm hover:border-amber-400/50 hover:shadow-md'
+          : 'border border-border/60 bg-card shadow-sm hover:border-border hover:shadow-md'
       )}
     >
-      {/* 删除按钮（预览模式下不显示） */}
       {!preview && showMenu && (
         <button
           onClick={handleDelete}
           onMouseDown={(e) => e.stopPropagation()}
-          className="absolute -top-2 -left-2 z-50 w-6 h-6 bg-destructive text-white rounded-full flex items-center justify-center shadow-sm hover:bg-destructive/90 transition-colors"
+          className="absolute -top-2 -left-2 z-50 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-white shadow-sm transition-colors hover:bg-destructive/90"
           title="删除"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="h-3.5 w-3.5" />
         </button>
       )}
 
-      {/* 顶部：公历日期 */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          <Calendar
-            className={cn(
-              'w-4 h-4',
-              isColorful ? 'text-blue-600 dark:text-blue-400' : 'text-foreground/60'
-            )}
-          />
-          <span
-            className={cn(
-              'text-lg font-bold',
-              isColorful ? 'text-blue-700 dark:text-blue-300' : 'text-foreground'
-            )}
-          >
-            {year}/{month.toString().padStart(2, '0')}/{day.toString().padStart(2, '0')}
-          </span>
-        </div>
-        <span
-          className={cn(
-            'text-xs',
-            isColorful ? 'text-purple-600 dark:text-purple-400' : 'text-muted-foreground'
-          )}
-        >
-          {weekDayName}
-        </span>
-      </div>
-
-      {/* 分隔线 */}
-      <div
-        className={cn(
-          'h-px mb-3',
-          isColorful ? 'bg-gradient-to-r from-transparent via-primary/30 to-transparent' : 'bg-border'
-        )}
-      />
-
-      {/* 主要内容区域：左右分栏 */}
-      <div className="flex-1 grid grid-cols-2 gap-3 min-h-0">
-        {/* 左侧：日期信息 */}
-        <div className="flex flex-col min-h-0">
-          {/* 农历 */}
-          <div
-            className={cn(
-              'text-xs mb-1',
-              isColorful ? 'text-purple-600 dark:text-purple-400' : 'text-muted-foreground'
-            )}
-          >
-            农历
-          </div>
-          <div
-            className={cn(
-              'text-lg font-bold mb-2',
-              isColorful ? 'text-purple-700 dark:text-purple-300' : 'text-foreground'
-            )}
-          >
-            {lunarMonth}{lunarDay}
-          </div>
-
-          {/* 天干地支和生肖 */}
-          <div
-            className={cn(
-              'text-xs font-medium mb-1',
-              isColorful ? 'text-purple-600 dark:text-purple-400' : 'text-foreground/80'
-            )}
-          >
-            {ganZhi}年 · {zodiac}
-          </div>
-
-          {/* 节日或节气 */}
-          {(festival || jieQi) && (
+      <div className="flex h-full gap-4">
+        <div className="flex w-[138px] shrink-0 flex-col justify-between">
+          <div>
             <div
               className={cn(
-                'text-xs truncate',
-                isColorful ? 'text-pink-600 dark:text-pink-400' : 'text-muted-foreground'
-              )}
-              title={festival || jieQi}
-            >
-              {festival || jieQi}
-            </div>
-          )}
-        </div>
-
-        {/* 右侧：今日宜忌 */}
-        {(yi.length > 0 || ji.length > 0) && (
-          <div className="flex flex-col min-h-0">
-            <div
-              className={cn(
-                'text-xs mb-2 font-medium',
-                isColorful ? 'text-foreground/80' : 'text-muted-foreground'
+                'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium',
+                isColorful
+                  ? 'bg-amber-400/15 text-amber-700 dark:text-amber-300'
+                  : 'bg-muted text-muted-foreground'
               )}
             >
-              今日
+              <Calendar className="h-3.5 w-3.5" />
+              {weekDayName}
             </div>
-
-            {/* 宜 */}
-            {yi.length > 0 && (
-              <div className="mb-2">
-                <div
-                  className={cn(
-                    'text-[10px] font-bold mb-1',
-                    isColorful
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-green-600 dark:text-green-500'
-                  )}
-                >
-                  宜
-                </div>
-                <div
-                  className={cn(
-                    'text-xs leading-tight',
-                    isColorful ? 'text-green-700 dark:text-green-300' : 'text-foreground/80'
-                  )}
-                  title={yi.join(' ')}
-                >
-                  {yi.slice(0, 3).join(' · ')}
-                </div>
+            <div className="mt-3 flex items-end gap-2">
+              <span className="text-[64px] font-semibold leading-[0.86] tracking-normal text-foreground">
+                {day}
+              </span>
+              <div className="pb-1.5 text-sm font-medium leading-tight text-muted-foreground">
+                <div>{year}</div>
+                <div>{month.toString().padStart(2, '0')}月</div>
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* 忌 */}
-            {ji.length > 0 && (
-              <div>
-                <div
-                  className={cn(
-                    'text-[10px] font-bold mb-1',
-                    isColorful ? 'text-red-600 dark:text-red-400' : 'text-red-600 dark:text-red-500'
-                  )}
-                >
-                  忌
-                </div>
-                <div
-                  className={cn(
-                    'text-xs leading-tight',
-                    isColorful ? 'text-red-700 dark:text-red-300' : 'text-foreground/80'
-                  )}
-                  title={ji.join(' ')}
-                >
-                  {ji.slice(0, 3).join(' · ')}
-                </div>
+        </div>
+
+        <div className="min-w-0 flex-1 border-l border-border/70 pl-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[11px] font-medium uppercase tracking-normal text-muted-foreground">
+                农历
+              </div>
+              <div className="mt-1 truncate text-xl font-semibold leading-none text-foreground">
+                {lunarDateLabel}
+              </div>
+            </div>
+            {holidayLabel && (
+              <div
+                className={cn(
+                  'max-w-[104px] truncate rounded-md px-2 py-1 text-[11px] font-medium',
+                  isColorful
+                    ? 'bg-rose-400/15 text-rose-700 dark:text-rose-300'
+                    : 'bg-muted text-foreground/75'
+                )}
+                title={holidayLabel}
+              >
+                {holidayLabel}
               </div>
             )}
           </div>
-        )}
+
+          <div className="mt-3 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            <Sparkles
+              className={cn(
+                'h-3.5 w-3.5',
+                isColorful ? 'text-sky-600 dark:text-sky-300' : 'text-foreground/45'
+              )}
+            />
+            <span className="truncate">
+              {ganZhi}年 · {zodiac}
+            </span>
+          </div>
+
+          {(yi.length > 0 || ji.length > 0) && (
+            <div className="mt-4 grid gap-2">
+              {yi.length > 0 && (
+                <div className="grid grid-cols-[22px_minmax(0,1fr)] items-start gap-2">
+                  <span
+                    className={cn(
+                      'rounded px-1.5 py-0.5 text-center text-[11px] font-semibold leading-none',
+                      isColorful
+                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
+                        : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                    )}
+                  >
+                    宜
+                  </span>
+                  <span
+                    className="truncate text-xs leading-5 text-foreground/80"
+                    title={yi.join(' ')}
+                  >
+                    {yiText}
+                  </span>
+                </div>
+              )}
+
+              {ji.length > 0 && (
+                <div className="grid grid-cols-[22px_minmax(0,1fr)] items-start gap-2">
+                  <span
+                    className={cn(
+                      'rounded px-1.5 py-0.5 text-center text-[11px] font-semibold leading-none',
+                      isColorful
+                        ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300'
+                        : 'bg-rose-500/10 text-rose-700 dark:text-rose-400'
+                    )}
+                  >
+                    忌
+                  </span>
+                  <span
+                    className="truncate text-xs leading-5 text-foreground/80"
+                    title={ji.join(' ')}
+                  >
+                    {jiText}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
 }
-
